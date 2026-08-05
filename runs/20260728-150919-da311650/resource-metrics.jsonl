@@ -1,0 +1,7 @@
+{"timestamp": "2026-07-28T15:09:20.667145", "pid": 28628, "run_dir_disk_bytes": 2887, "cpu_percent": 0.0, "memory_rss_bytes": 83046400, "memory_percent": 0.49119245295817776}
+{"timestamp": "2026-07-28T15:09:21.682632", "pid": 28628, "run_dir_disk_bytes": 6517, "cpu_percent": 1.5, "memory_rss_bytes": 83214336, "memory_percent": 0.4921857397927665}
+{"timestamp": "2026-07-28T15:09:22.698554", "pid": 28628, "run_dir_disk_bytes": 6692, "cpu_percent": 0.0, "memory_rss_bytes": 83214336, "memory_percent": 0.4921857397927665}
+{"timestamp": "2026-07-28T15:09:23.712181", "pid": 28628, "run_dir_disk_bytes": 6867, "cpu_percent": 0.0, "memory_rss_bytes": 83214336, "memory_percent": 0.4921857397927665}
+{"timestamp": "2026-07-28T15:09:24.727436", "pid": 28628, "run_dir_disk_bytes": 7042, "cpu_percent": 0.0, "memory_rss_bytes": 83218432, "memory_percent": 0.49220996630092717}
+{"timestamp": "2026-07-28T15:09:25.744001", "pid": 28628, "run_dir_disk_bytes": 8749, "cpu_percent": 0.0, "memory_rss_bytes": 83238912, "memory_percent": 0.49233109884173065}
+{"timestamp": "2026-07-28T15:09:26.748391", "pid": 28628, "run_dir_disk_bytes": 903588, "cpu_percent": 1.6, "memory_rss_bytes": 83255296, "memory_percent": 0.49242800487437344}

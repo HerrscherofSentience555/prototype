@@ -1,0 +1,19 @@
+job_name: dlrm-random-smoke
+mode: COLD_START
+backend:
+  name: dlrm
+  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  python_env: ~/venvs/torchrec17
+  wsl_distribution: Ubuntu-22.04
+nproc_per_node: 1
+data:
+  format: random
+  batch_size: 4
+training:
+  epochs: 1
+  max_steps: 1
+  learning_rate: 0.01
+checkpoint:
+  enabled: false
+profile:
+  enabled: false

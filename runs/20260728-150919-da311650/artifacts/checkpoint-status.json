@@ -1,0 +1,8 @@
+{
+  "backend": "dlrm",
+  "checkpoint_save_supported": true,
+  "checkpoint_load_supported": true,
+  "checkpoint_note": "The local torchrec_dlrm.dlrm_main.py command path supports single-process smoke checkpoint save/load through model.pt and optional optimizer.pt. Multi-process sharded production checkpointing still requires Torch Distributed Checkpoint.",
+  "requested_save_dir": "C:\\Users\\han\\Desktop\\prototype\\runs\\20260728-150919-da311650\\checkpoints",
+  "latest_path": "C:\\Users\\han\\Desktop\\prototype\\runs\\20260728-150919-da311650\\checkpoints\\latest.json"
+}

@@ -1,0 +1,14 @@
+{
+  "backend": "stub",
+  "command": [
+    "D:\\PYthon\\python.exe",
+    "-m",
+    "prototype.runner.cli",
+    "--config",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260723-153417-fb43ddef\\resolved-config.yaml",
+    "--run-dir",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260723-153417-fb43ddef"
+  ],
+  "cwd": "C:\\Users\\han\\Desktop",
+  "launched_at": "2026-07-23T15:34:17.187733"
+}

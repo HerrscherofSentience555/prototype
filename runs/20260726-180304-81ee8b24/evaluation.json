@@ -1,0 +1,7 @@
+{
+  "backend": "stub",
+  "mode": "EVALUATE",
+  "auc": 0.5,
+  "log_loss": 0.6931,
+  "source_checkpoint": "stub-checkpoint"
+}

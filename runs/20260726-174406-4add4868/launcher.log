@@ -1,0 +1,3 @@
+
+Resolved DLRM backend command:
+wsl -d Ubuntu-22.04 bash -lc "set -e; source $HOME/venvs/torchrec17/bin/activate; cd /mnt/c/Users/han/Desktop/dlrm; export TORCHREC_PROTOTYPE_RUN_DIR=/mnt/c/Users/han/Desktop/prototype/runs/20260726-174406-4add4868; exec torchrun --standalone --nnodes=1 --nproc_per_node=1 -m torchrec_dlrm.dlrm_main --epochs 1 --batch_size 4 --learning_rate 0.01 --limit_train_batches 1 --limit_val_batches 1 --limit_test_batches 1 --validation_freq_within_epoch 50"

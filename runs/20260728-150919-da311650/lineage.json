@@ -1,0 +1,6 @@
+{
+  "job_id": "20260728-150919-da311650",
+  "mode": "RESUME",
+  "parent_checkpoint": "C:\\Users\\han\\Desktop\\prototype\\runs\\20260728-150552-7e92c28f\\checkpoints\\step-final",
+  "parent_run_id": "20260728-150552-7e92c28f"
+}

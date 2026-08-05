@@ -1,0 +1,23 @@
+job_name: dlrm-criteo-kaggle-smoke
+mode: COLD_START
+backend:
+  name: dlrm
+  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  python_env: ~/venvs/torchrec17
+  wsl_distribution: Ubuntu-22.04
+nproc_per_node: 1
+data:
+  format: criteo_binary
+  criteo_binary_path: C:\Users\han\Desktop\prototype\data\criteo_kaggle_sample_npy
+  dataset_name: criteo_kaggle
+  batch_size: 4
+  test_batch_size: 4
+  mmap_mode: false
+training:
+  epochs: 1
+  max_steps: 1
+  learning_rate: 0.01
+checkpoint:
+  enabled: false
+profile:
+  enabled: false

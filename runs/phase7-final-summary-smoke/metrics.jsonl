@@ -1,0 +1,3 @@
+{"timestamp": "2026-07-26T18:03:04.502803", "step": null, "metric": "val_auc", "value": 0.12, "stage": "val"}
+{"timestamp": "2026-07-26T18:03:04.503498", "step": null, "metric": "test_auc", "value": 0.34, "stage": "test"}
+{"timestamp": "2026-07-26T18:03:04.505028", "step": null, "metric": "log_loss", "value": 0.56}

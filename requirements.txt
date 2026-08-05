@@ -1,0 +1,6 @@
+gradio
+pandas
+pydantic
+pyyaml
+pyarrow
+psutil

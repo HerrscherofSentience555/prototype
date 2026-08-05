@@ -1,0 +1,20 @@
+job_name: torchrec-v1-contract-smoke
+mode: COLD_START
+backend:
+  name: torchrec_v1
+  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  python_env: ~/venvs/torchrec17
+  wsl_distribution: Ubuntu-22.04
+nproc_per_node: 1
+model:
+  file: examples/models/torchrec_v1_model.py
+data:
+  format: random
+  batch_size: 4
+training:
+  epochs: 1
+  max_steps: 1
+checkpoint:
+  enabled: false
+profile:
+  enabled: false

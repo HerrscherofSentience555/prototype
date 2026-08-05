@@ -1,0 +1,51 @@
+{
+  "job_id": "20260728-150905-887685af",
+  "job_name": "dlrm-criteo-kaggle-evaluate-smoke-2",
+  "status": "SUCCEEDED",
+  "backend": "dlrm",
+  "mode": "EVALUATE",
+  "data_format": "criteo_binary",
+  "dataset_name": "criteo_kaggle",
+  "created_at": "2026-07-28T15:09:05.669036",
+  "started_at": "2026-07-28T15:09:05.735594",
+  "ended_at": "2026-07-28T15:09:19.336754",
+  "duration_seconds": 13.60116,
+  "metrics": {
+    "val_auc": {
+      "count": 1,
+      "latest": 0.0,
+      "best": 0.0,
+      "best_step": null
+    },
+    "val_samples": {
+      "count": 1,
+      "latest": 4,
+      "best": 4,
+      "best_step": null
+    },
+    "throughput_iter_per_sec": {
+      "count": 2,
+      "latest": 63.21,
+      "best": 11.76,
+      "best_step": null
+    },
+    "test_auc": {
+      "count": 1,
+      "latest": 0.0,
+      "best": 0.0,
+      "best_step": null
+    },
+    "test_samples": {
+      "count": 1,
+      "latest": 4,
+      "best": 4,
+      "best_step": null
+    }
+  },
+  "lineage": {
+    "job_id": "20260728-150905-887685af",
+    "mode": "EVALUATE",
+    "parent_checkpoint": "C:\\Users\\han\\Desktop\\prototype\\runs\\20260728-150552-7e92c28f\\checkpoints\\step-final",
+    "parent_run_id": "20260728-150552-7e92c28f"
+  }
+}

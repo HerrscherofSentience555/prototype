@@ -1,0 +1,8 @@
+Starting prototype training run.
+Backend: stub
+Mode: RunMode.COLD_START
+Model file: ./model.py
+Data format: random
+nproc_per_node: 1
+step=1 loss=1.0000 auc=0.5300
+Training completed.

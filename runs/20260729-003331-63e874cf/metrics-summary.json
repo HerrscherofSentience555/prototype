@@ -1,0 +1,14 @@
+{
+  "train_loss": {
+    "count": 1,
+    "latest": 1.0,
+    "best": 1.0,
+    "best_step": 1
+  },
+  "auc": {
+    "count": 1,
+    "latest": 0.53,
+    "best": 0.53,
+    "best_step": 1
+  }
+}

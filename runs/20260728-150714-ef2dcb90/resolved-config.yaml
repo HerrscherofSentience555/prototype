@@ -1,0 +1,56 @@
+job_name: dlrm-criteo-kaggle-resume-smoke
+mode: RESUME
+backend:
+  name: dlrm
+  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  python_env: ~/venvs/torchrec17
+  wsl_distribution: Ubuntu-22.04
+nproc_per_node: 1
+model:
+  file: ./model.py
+  config_file: null
+  num_embeddings: 1024
+  embedding_dim: 8
+  dense_arch_layer_sizes: 8,8
+  over_arch_layer_sizes: 8,1
+device:
+  gpu_ids:
+  - 0
+  embedding_placement: DEVICE
+  cache_load_factor: 0.2
+data:
+  train_path: ./data/train
+  validation_path: ./data/validation
+  test_path: ./data/test
+  format: criteo_binary
+  criteo_binary_path: C:\Users\han\Desktop\prototype\data\criteo_kaggle_sample_npy
+  synthetic_multi_hot_path: null
+  schema_path: null
+  dataset_name: criteo_kaggle
+  batch_size: 4
+  test_batch_size: 4
+  num_workers: 2
+  prefetch_factor: 2
+  pin_memory: false
+  mmap_mode: false
+  persistent_workers: false
+training:
+  epochs: 1
+  max_steps: 1
+  learning_rate: 0.01
+  log_every_n_steps: 10
+  eval_every_n_steps: 999
+checkpoint:
+  enabled: true
+  save_dir: C:\Users\han\Desktop\prototype\runs\20260728-150714-ef2dcb90\checkpoints
+  save_every_n_steps: 100
+  keep_last: 3
+  save_optimizer: true
+  load_path: C:\Users\han\Desktop\prototype\runs\20260728-150552-7e92c28f\checkpoints\step-final
+  load_mode: FULL
+profile:
+  enabled: false
+  start_step: 100
+  end_step: 120
+  record_shapes: true
+  profile_memory: true

@@ -1,0 +1,61 @@
+job_name: profile-telemetry-smoke
+mode: COLD_START
+backend:
+  name: stub
+  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  python_env: ~/venvs/torchrec17
+  wsl_distribution: Ubuntu-22.04
+nproc_per_node: 1
+model:
+  file: ./model.py
+  config_file: null
+  num_embeddings: null
+  embedding_dim: null
+  dense_arch_layer_sizes: null
+  over_arch_layer_sizes: null
+device:
+  gpu_ids:
+  - 0
+  embedding_placement: DEVICE
+  cache_load_factor: 0.2
+precision:
+  embedding: FP32
+  dense_compute: FP32
+  comm_forward: FP32
+  comm_backward: FP32
+data:
+  train_path: ./data/train
+  validation_path: ./data/validation
+  test_path: ./data/test
+  format: random
+  criteo_binary_path: null
+  synthetic_multi_hot_path: null
+  schema_path: null
+  dataset_name: criteo_1t
+  batch_size: 32
+  test_batch_size: null
+  num_workers: 2
+  prefetch_factor: 2
+  pin_memory: false
+  mmap_mode: false
+  persistent_workers: false
+training:
+  epochs: 1
+  max_steps: 1
+  learning_rate: 0.01
+  log_every_n_steps: 10
+  eval_every_n_steps: 50
+checkpoint:
+  enabled: true
+  save_dir: C:\Users\han\Desktop\prototype\runs\20260729-003331-63e874cf\checkpoints
+  save_every_n_steps: 100
+  keep_last: 3
+  save_optimizer: true
+  load_path: null
+  load_mode: FULL
+profile:
+  enabled: true
+  start_step: 1
+  end_step: 1
+  record_shapes: true
+  profile_memory: true

@@ -1,0 +1,8 @@
+{"timestamp": "2026-07-28T15:09:25.823035", "step": null, "metric": "throughput_iter_per_sec", "value": 24.51}
+{"timestamp": "2026-07-28T15:09:25.826506", "step": 1, "metric": "total_iterations", "value": 1}
+{"timestamp": "2026-07-28T15:09:25.845573", "step": null, "metric": "val_auc", "value": 0.0, "stage": "val"}
+{"timestamp": "2026-07-28T15:09:25.846237", "step": null, "metric": "val_samples", "value": 4, "stage": "val"}
+{"timestamp": "2026-07-28T15:09:25.846589", "step": null, "metric": "throughput_iter_per_sec", "value": 46.87}
+{"timestamp": "2026-07-28T15:09:25.869409", "step": null, "metric": "test_auc", "value": 0.0, "stage": "test"}
+{"timestamp": "2026-07-28T15:09:25.875366", "step": null, "metric": "test_samples", "value": 4, "stage": "test"}
+{"timestamp": "2026-07-28T15:09:25.879144", "step": null, "metric": "throughput_iter_per_sec", "value": 45.58}

@@ -1,0 +1,61 @@
+Starting real DLRM backend run.
+DLRM root: /mnt/c/Users/han/Desktop/dlrm
+WSL distribution: Ubuntu-22.04
+Python env: ~/venvs/torchrec17
+wsl: 检测到 localhost 代理配置，但未镜像到 WSL。NAT 模式下的 WSL 不支持 localhost 代理。�倀剁䵁㩓⠠牬慢捴彨楳敺慷浲灵獟整獰敤慣役瑳牡ⱴ搠捥祡獟整獰㨩⠠⸰㄰ⰴ〠ⰰ〠਩WARNING:torchrec.distributed.planner.types:The topology was constructed directly rather than via TopologyFactory.create_topology(). Please use TopologyFactory to ensure proper hardware configuration resolution and validation; otherwise, the job will fail.
+/mnt/c/Users/han/Desktop/dlrm/torchrec_dlrm/dlrm_main.py:776: FutureWarning: HeuristicalStorageReservation is known to cause issues, particularly during dry run where it over-estimates dense tensor size. We recommend passing a dense_tensor_estimate, or migrating to FixedPercentageStorageReservation. This policy is over-tuned to specific use cases.
+  storage_reservation=HeuristicalStorageReservation(percentage=0.05),
+WARNING:torchrec.distributed.planner.storage_reservations:There is a known issue with TorchRec's dense tensor size calculation in dry run scenarios, where tensors are not materialized. Consider passing in a dense_tensor_estimate to planner input if you are running in dry run environment.
+/mnt/c/Users/han/Desktop/torchrec/torchrec/distributed/model_parallel.py:183: FutureWarning: `broadcast_buffers` is deprecated. Use `forward_sync_buffers` instead. IMPORTANT: unlike `broadcast_buffers=False`, `forward_sync_buffers=False` still syncs buffers at init. If you rely on buffers NOT being synced at init (e.g. rank-local buffers), keep using `broadcast_buffers=False` until `init_sync_buffers` is available.
+  DistributedDataParallel(
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+[rank0]:     return _run_code(code, main_globals, None,
+[rank0]:   File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+[rank0]:     exec(code, run_globals)
+[rank0]:   File "/mnt/c/Users/han/Desktop/dlrm/torchrec_dlrm/dlrm_main.py", line 858, in <module>
+[rank0]:     invoke_main()  # pragma: no cover
+[rank0]:   File "/mnt/c/Users/han/Desktop/dlrm/torchrec_dlrm/dlrm_main.py", line 854, in invoke_main
+[rank0]:     main(sys.argv[1:])
+[rank0]:   File "/mnt/c/Users/han/Desktop/dlrm/torchrec_dlrm/dlrm_main.py", line 809, in main
+[rank0]:     loaded_checkpoint_metadata = _load_checkpoint_if_needed(
+[rank0]:   File "/mnt/c/Users/han/Desktop/dlrm/torchrec_dlrm/dlrm_main.py", line 350, in _load_checkpoint_if_needed
+[rank0]:     checkpoint = torch.load(model_path, map_location=device)
+[rank0]:   File "/home/han/venvs/torchrec17/lib/python3.10/site-packages/torch/serialization.py", line 1609, in load
+[rank0]:     raise pickle.UnpicklingError(_get_wo_message(str(e))) from None
+[rank0]: _pickle.UnpicklingError: Weights only load failed. This file can still be loaded, to do so you have two options, do those steps only if you trust the source of the checkpoint. 
+[rank0]: 	(1) In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.
+[rank0]: 	(2) Alternatively, to load with `weights_only=True` please check the recommended steps in the following error message.
+[rank0]: 	WeightsUnpickler error: Unsupported global: GLOBAL torch.distributed._shard.sharded_tensor.api.ShardedTensor was not an allowed global by default. Please use `torch.serialization.add_safe_globals([torch.distributed._shard.sharded_tensor.api.ShardedTensor])` or the `torch.serialization.safe_globals([torch.distributed._shard.sharded_tensor.api.ShardedTensor])` context manager to allowlist this global if you trust this class/function.
+
+[rank0]: Check the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.
+E0728 15:07:13.426000 295 torch/distributed/elastic/multiprocessing/api.py:1002] failed (exitcode: 1) local_rank: 0 (pid: 392) of binary: /home/han/venvs/torchrec17/bin/python
+Traceback (most recent call last):
+  File "/home/han/venvs/torchrec17/bin/torchrun", line 6, in <module>
+    sys.exit(main())
+  File "/home/han/venvs/torchrec17/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 367, in wrapper
+    return f(*args, **kwargs)
+  File "/home/han/venvs/torchrec17/lib/python3.10/site-packages/torch/distributed/run.py", line 1028, in main
+    run(args)
+  File "/home/han/venvs/torchrec17/lib/python3.10/site-packages/torch/distributed/run.py", line 1019, in run
+    elastic_launch(
+  File "/home/han/venvs/torchrec17/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 194, in __call__
+    return launch_agent(
+  File "/home/han/venvs/torchrec17/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 383, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+torchrec_dlrm.dlrm_main FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-07-28_15:07:13
+  host      : DESKTOP-E62IVLR.localdomain
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 392) 
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================

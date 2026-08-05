@@ -1,0 +1,2 @@
+{"timestamp": "2026-07-26T18:01:27.925638", "step": null, "metric": "eval_auc", "value": 0.5}
+{"timestamp": "2026-07-26T18:01:27.926270", "step": null, "metric": "eval_log_loss", "value": 0.6931}

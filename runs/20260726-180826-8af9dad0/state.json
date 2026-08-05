@@ -1,0 +1,30 @@
+{
+  "job_id": "20260726-180826-8af9dad0",
+  "job_name": "phase8-running-stop-smoke",
+  "status": "STOPPED",
+  "backend": "stub",
+  "command": [
+    "D:\\PYthon\\python.exe",
+    "-m",
+    "prototype.runner.cli",
+    "--config",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260726-180826-8af9dad0\\resolved-config.yaml",
+    "--run-dir",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260726-180826-8af9dad0"
+  ],
+  "cwd": "C:\\Users\\han\\Desktop",
+  "pid": 4240,
+  "wsl_pid": null,
+  "error_message": null,
+  "created_at": "2026-07-26T18:08:26.286583",
+  "started_at": "2026-07-26T18:08:26.337973",
+  "updated_at": "2026-07-26T18:08:27.563866",
+  "ended_at": "2026-07-26T18:08:27.563866",
+  "duration_seconds": 1.225893,
+  "exit_code": null,
+  "stopped_at": "2026-07-26T18:08:27.563866",
+  "stop_reason": "user_requested",
+  "stop_signal": "CTRL_BREAK_EVENT",
+  "force_killed": false,
+  "stop_error": null
+}

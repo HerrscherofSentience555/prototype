@@ -1,0 +1,12 @@
+{
+  "created_at": "2026-07-28T15:06:04.572512",
+  "checkpoint_load_supported": true,
+  "checkpoint_save_supported": true,
+  "model_path": "/mnt/c/Users/han/Desktop/prototype/runs/20260728-150552-7e92c28f/checkpoints/step-final/model.pt",
+  "optimizer_path": "/mnt/c/Users/han/Desktop/prototype/runs/20260728-150552-7e92c28f/checkpoints/step-final/optimizer.pt",
+  "dataset_name": "criteo_kaggle",
+  "val_aurocs": [
+    0.0
+  ],
+  "test_auroc": 0.0
+}

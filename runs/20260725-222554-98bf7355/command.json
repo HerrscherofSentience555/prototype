@@ -1,0 +1,20 @@
+{
+  "backend": "stub",
+  "backend_config": {
+    "name": "stub",
+    "dlrm_root": "/mnt/c/Users/han/Desktop/dlrm",
+    "python_env": "~/venvs/torchrec17",
+    "wsl_distribution": "Ubuntu-22.04"
+  },
+  "command": [
+    "D:\\PYthon\\python.exe",
+    "-m",
+    "prototype.runner.cli",
+    "--config",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260725-222554-98bf7355\\resolved-config.yaml",
+    "--run-dir",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260725-222554-98bf7355"
+  ],
+  "cwd": "C:\\Users\\han\\Desktop",
+  "launched_at": "2026-07-25T22:25:54.331167"
+}

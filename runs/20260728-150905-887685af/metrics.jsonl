@@ -1,0 +1,6 @@
+{"timestamp": "2026-07-28T15:09:18.248031", "step": null, "metric": "val_auc", "value": 0.0, "stage": "val"}
+{"timestamp": "2026-07-28T15:09:18.249819", "step": null, "metric": "val_samples", "value": 4, "stage": "val"}
+{"timestamp": "2026-07-28T15:09:18.252465", "step": null, "metric": "throughput_iter_per_sec", "value": 11.76}
+{"timestamp": "2026-07-28T15:09:18.268632", "step": null, "metric": "test_auc", "value": 0.0, "stage": "test"}
+{"timestamp": "2026-07-28T15:09:18.271754", "step": null, "metric": "test_samples", "value": 4, "stage": "test"}
+{"timestamp": "2026-07-28T15:09:18.274411", "step": null, "metric": "throughput_iter_per_sec", "value": 63.21}

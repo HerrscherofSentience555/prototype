@@ -1,0 +1,29 @@
+{
+  "backend": "dlrm",
+  "backend_config": {
+    "name": "dlrm",
+    "dlrm_root": "/mnt/c/Users/han/Desktop/dlrm",
+    "python_env": "~/venvs/torchrec17",
+    "wsl_distribution": "Ubuntu-22.04"
+  },
+  "command": [
+    "D:\\PYthon\\python.exe",
+    "-m",
+    "prototype.runner.cli",
+    "--config",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260724-163502-733c7c4b\\resolved-config.yaml",
+    "--run-dir",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260724-163502-733c7c4b"
+  ],
+  "cwd": "C:\\Users\\han\\Desktop",
+  "launched_at": "2026-07-24T16:35:02.209636",
+  "backend_command": [
+    "wsl",
+    "-d",
+    "Ubuntu-22.04",
+    "bash",
+    "-lc",
+    "set -e; source $HOME/venvs/torchrec17/bin/activate; cd /mnt/c/Users/han/Desktop/dlrm; export TORCHREC_PROTOTYPE_RUN_DIR=/mnt/c/Users/han/Desktop/prototype/runs/20260724-163502-733c7c4b; exec torchrun --standalone --nnodes=1 --nproc_per_node=1 -m torchrec_dlrm.dlrm_main --epochs 1 --batch_size 4 --learning_rate 0.01 --limit_train_batches 1 --limit_val_batches 1 --limit_test_batches 1 --validation_freq_within_epoch 50"
+  ],
+  "backend_command_display": "wsl -d Ubuntu-22.04 bash -lc \"set -e; source $HOME/venvs/torchrec17/bin/activate; cd /mnt/c/Users/han/Desktop/dlrm; export TORCHREC_PROTOTYPE_RUN_DIR=/mnt/c/Users/han/Desktop/prototype/runs/20260724-163502-733c7c4b; exec torchrun --standalone --nnodes=1 --nproc_per_node=1 -m torchrec_dlrm.dlrm_main --epochs 1 --batch_size 4 --learning_rate 0.01 --limit_train_batches 1 --limit_val_batches 1 --limit_test_batches 1 --validation_freq_within_epoch 50\""
+}

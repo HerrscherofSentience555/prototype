@@ -1,0 +1,27 @@
+job_name: stub-smoke
+mode: COLD_START
+backend:
+  name: stub
+  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  python_env: ~/venvs/torchrec17
+  wsl_distribution: Ubuntu-22.04
+nproc_per_node: 1
+model:
+  file: ./model.py
+  config_file: null
+device:
+  gpu_ids:
+  - 0
+  embedding_placement: DEVICE
+  cache_load_factor: 0.2
+data:
+  format: random
+  batch_size: 4
+training:
+  epochs: 1
+  max_steps: 2
+  learning_rate: 0.01
+checkpoint:
+  enabled: true
+profile:
+  enabled: false

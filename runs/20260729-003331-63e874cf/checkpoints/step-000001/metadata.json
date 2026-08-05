@@ -1,0 +1,8 @@
+{
+  "backend": "stub",
+  "step": 1,
+  "created_at": "2026-07-29T00:33:32.170090",
+  "checkpoint_load_supported": true,
+  "model_path": "C:\\Users\\han\\Desktop\\prototype\\runs\\20260729-003331-63e874cf\\checkpoints\\step-000001\\model.json",
+  "optimizer_path": "C:\\Users\\han\\Desktop\\prototype\\runs\\20260729-003331-63e874cf\\checkpoints\\step-000001\\optimizer.json"
+}

@@ -1,0 +1,13 @@
+{
+  "backend": "dlrm",
+  "mode": "EVALUATE",
+  "source_checkpoint": "sample-checkpoint",
+  "checkpoint_load_supported": false,
+  "checkpoint_load_note": "The current upstream torchrec_dlrm.dlrm_main.py command has no checkpoint load argument. Phase 7 records the checkpoint path and runs a real random-data evaluation command without training batches.",
+  "val_auc": null,
+  "test_auc": null,
+  "log_loss": null,
+  "val_samples": null,
+  "test_samples": null,
+  "metrics_record_count": 0
+}

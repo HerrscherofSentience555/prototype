@@ -1,0 +1,5 @@
+{
+  "latest_checkpoint_dir": "/mnt/c/Users/han/Desktop/prototype/runs/20260728-150552-7e92c28f/checkpoints/step-final",
+  "metadata_path": "/mnt/c/Users/han/Desktop/prototype/runs/20260728-150552-7e92c28f/checkpoints/step-final/metadata.json",
+  "checkpoint_load_supported": true
+}

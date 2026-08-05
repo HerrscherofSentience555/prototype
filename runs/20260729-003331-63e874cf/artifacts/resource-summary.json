@@ -1,0 +1,12 @@
+{
+  "record_count": 1,
+  "max_cpu_percent": null,
+  "max_memory_rss_bytes": null,
+  "max_child_memory_rss_bytes": null,
+  "max_memory_percent": null,
+  "max_run_dir_disk_bytes": 2487,
+  "max_gpu_utilization_percent": 27.0,
+  "max_gpu_memory_used_mb": 706.0,
+  "max_wsl_torch_cpu_percent": null,
+  "max_wsl_torch_memory_rss_kb": null
+}

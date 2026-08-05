@@ -1,0 +1,2 @@
+{"timestamp": "2026-07-24T16:35:49.162329", "step": 1, "metric": "train_loss", "value": 1.0}
+{"timestamp": "2026-07-24T16:35:49.162744", "step": 1, "metric": "auc", "value": 0.53}

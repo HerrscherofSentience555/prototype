@@ -1,0 +1,29 @@
+{
+  "backend": "dlrm",
+  "backend_config": {
+    "name": "dlrm",
+    "dlrm_root": "/mnt/c/Users/han/Desktop/dlrm",
+    "python_env": "~/venvs/torchrec17",
+    "wsl_distribution": "Ubuntu-22.04"
+  },
+  "command": [
+    "D:\\PYthon\\python.exe",
+    "-m",
+    "prototype.runner.cli",
+    "--config",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260728-150700-68bed0e6\\resolved-config.yaml",
+    "--run-dir",
+    "C:\\Users\\han\\Desktop\\prototype\\runs\\20260728-150700-68bed0e6"
+  ],
+  "cwd": "C:\\Users\\han\\Desktop",
+  "launched_at": "2026-07-28T15:07:00.775985",
+  "backend_command": [
+    "wsl",
+    "-d",
+    "Ubuntu-22.04",
+    "bash",
+    "-lc",
+    "set -e; export PYTHONIOENCODING=utf-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; source $HOME/venvs/torchrec17/bin/activate; cd /mnt/c/Users/han/Desktop/dlrm; export TORCHREC_PROTOTYPE_RUN_DIR=/mnt/c/Users/han/Desktop/prototype/runs/20260728-150700-68bed0e6; exec torchrun --standalone --nnodes=1 --nproc_per_node=1 -m torchrec_dlrm.dlrm_main --epochs 1 --batch_size 4 --learning_rate 0.01 --test_batch_size 4 --num_embeddings 1024 --embedding_dim 8 --dense_arch_layer_sizes 8,8 --over_arch_layer_sizes 8,1 --dataset_name criteo_kaggle --in_memory_binary_criteo_path /mnt/c/Users/han/Desktop/prototype/data/criteo_kaggle_sample_npy --checkpoint_load_path /mnt/c/Users/han/Desktop/prototype/runs/20260728-150552-7e92c28f/checkpoints/step-final --limit_train_batches 0 --limit_val_batches 1 --limit_test_batches 1"
+  ],
+  "backend_command_display": "wsl -d Ubuntu-22.04 bash -lc \"set -e; export PYTHONIOENCODING=utf-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; source $HOME/venvs/torchrec17/bin/activate; cd /mnt/c/Users/han/Desktop/dlrm; export TORCHREC_PROTOTYPE_RUN_DIR=/mnt/c/Users/han/Desktop/prototype/runs/20260728-150700-68bed0e6; exec torchrun --standalone --nnodes=1 --nproc_per_node=1 -m torchrec_dlrm.dlrm_main --epochs 1 --batch_size 4 --learning_rate 0.01 --test_batch_size 4 --num_embeddings 1024 --embedding_dim 8 --dense_arch_layer_sizes 8,8 --over_arch_layer_sizes 8,1 --dataset_name criteo_kaggle --in_memory_binary_criteo_path /mnt/c/Users/han/Desktop/prototype/data/criteo_kaggle_sample_npy --checkpoint_load_path /mnt/c/Users/han/Desktop/prototype/runs/20260728-150552-7e92c28f/checkpoints/step-final --limit_train_batches 0 --limit_val_batches 1 --limit_test_batches 1\""
+}

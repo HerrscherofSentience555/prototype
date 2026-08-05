@@ -1,0 +1,9 @@
+{
+  "started_at": "2026-07-29T00:33:31.766381",
+  "ended_at": "2026-07-29T00:33:32.171148",
+  "duration_seconds": 0.40477639995515347,
+  "profile_trace_supported": false,
+  "trace_path": "C:\\Users\\han\\Desktop\\prototype\\runs\\20260729-003331-63e874cf\\profiles\\trace.json",
+  "profile_trace_error": "torch.profiler unavailable: ModuleNotFoundError: No module named 'torch'",
+  "profile_trace_note": "When torch.profiler is available this span exports a Chrome trace for work executed inside the runner process. Child torchrun processes still require instrumentation inside the active DLRM training loop."
+}

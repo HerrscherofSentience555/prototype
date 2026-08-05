@@ -1,0 +1,10 @@
+
+Runner failed with an unhandled exception.
+Traceback (most recent call last):
+  File "C:\Users\han\Desktop\prototype\runner\cli.py", line 24, in main
+    exit_code = backend.run(config, run_dir)
+  File "C:\Users\han\Desktop\prototype\runner\backends\dlrm_backend.py", line 13, in run
+    raise NotImplementedError(
+    ...<2 lines>...
+    )
+NotImplementedError: The dlrm backend is registered but not implemented yet. Phase 3 will connect it to the validated WSL2 TorchRec/DLRM command.

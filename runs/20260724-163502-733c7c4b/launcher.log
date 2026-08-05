@@ -1,0 +1,17 @@
+
+Resolved DLRM backend command:
+wsl -d Ubuntu-22.04 bash -lc "set -e; source $HOME/venvs/torchrec17/bin/activate; cd /mnt/c/Users/han/Desktop/dlrm; export TORCHREC_PROTOTYPE_RUN_DIR=/mnt/c/Users/han/Desktop/prototype/runs/20260724-163502-733c7c4b; exec torchrun --standalone --nnodes=1 --nproc_per_node=1 -m torchrec_dlrm.dlrm_main --epochs 1 --batch_size 4 --learning_rate 0.01 --limit_train_batches 1 --limit_val_batches 1 --limit_test_batches 1 --validation_freq_within_epoch 50"
+
+Runner failed with an unhandled exception.
+Traceback (most recent call last):
+  File "C:\Users\han\Desktop\prototype\runner\cli.py", line 24, in main
+    exit_code = backend.run(config, run_dir)
+  File "C:\Users\han\Desktop\prototype\runner\backends\dlrm_backend.py", line 60, in run
+    raise RuntimeError(
+    ...<2 lines>...
+    )
+RuntimeError: DLRM backend command exited with code 4294967295.
+Recent output:
+不存在具有所提供名称的分发。�
+ᤀŎ㩸 圀猀氀⼀匀攀爀瘀椀挀攀⼀圀匀䰀开䔀开䐀䤀匀吀刀伀开一伀吀开䘀伀唀一䐀ഀ਀
+�

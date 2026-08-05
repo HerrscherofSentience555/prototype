@@ -1,0 +1,8 @@
+label:
+  name: clicked
+dense_features:
+  - name: age
+  - name: price
+sparse_features:
+  - name: user_id
+  - name: item_id

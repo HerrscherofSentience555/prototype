@@ -1,0 +1,13 @@
+{
+  "backend": "dlrm",
+  "mode": "EVALUATE",
+  "source_checkpoint": "C:\\Users\\han\\Desktop\\prototype\\runs\\20260728-150552-7e92c28f\\checkpoints\\step-final",
+  "checkpoint_load_supported": true,
+  "checkpoint_load_note": "The local torchrec_dlrm.dlrm_main.py command accepts --checkpoint_load_path and loads model.pt before validation/test.",
+  "val_auc": 0.0,
+  "test_auc": 0.0,
+  "log_loss": null,
+  "val_samples": 4,
+  "test_samples": 4,
+  "metrics_record_count": 6
+}

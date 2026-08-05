@@ -1,0 +1,38 @@
+{
+  "throughput_iter_per_sec": {
+    "count": 3,
+    "latest": 45.58,
+    "best": 24.51,
+    "best_step": null
+  },
+  "total_iterations": {
+    "count": 1,
+    "latest": 1,
+    "best": 1,
+    "best_step": 1
+  },
+  "val_auc": {
+    "count": 1,
+    "latest": 0.0,
+    "best": 0.0,
+    "best_step": null
+  },
+  "val_samples": {
+    "count": 1,
+    "latest": 4,
+    "best": 4,
+    "best_step": null
+  },
+  "test_auc": {
+    "count": 1,
+    "latest": 0.0,
+    "best": 0.0,
+    "best_step": null
+  },
+  "test_samples": {
+    "count": 1,
+    "latest": 4,
+    "best": 4,
+    "best_step": null
+  }
+}

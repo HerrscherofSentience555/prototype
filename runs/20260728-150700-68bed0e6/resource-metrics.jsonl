@@ -1,0 +1,12 @@
+{"timestamp": "2026-07-28T15:07:01.504794", "pid": 22284, "run_dir_disk_bytes": 2889, "cpu_percent": 0.0, "memory_rss_bytes": 82767872, "memory_percent": 0.48954505040325025}
+{"timestamp": "2026-07-28T15:07:02.518799", "pid": 22284, "run_dir_disk_bytes": 5884, "cpu_percent": 3.1, "memory_rss_bytes": 82907136, "memory_percent": 0.490368751680714}
+{"timestamp": "2026-07-28T15:07:03.535248", "pid": 22284, "run_dir_disk_bytes": 6174, "cpu_percent": 0.0, "memory_rss_bytes": 82939904, "memory_percent": 0.49056256374599955}
+{"timestamp": "2026-07-28T15:07:04.551179", "pid": 22284, "run_dir_disk_bytes": 6350, "cpu_percent": 0.0, "memory_rss_bytes": 82939904, "memory_percent": 0.49056256374599955}
+{"timestamp": "2026-07-28T15:07:05.555589", "pid": 22284, "run_dir_disk_bytes": 6526, "cpu_percent": 0.0, "memory_rss_bytes": 82944000, "memory_percent": 0.49058679025416024}
+{"timestamp": "2026-07-28T15:07:06.570052", "pid": 22284, "run_dir_disk_bytes": 6702, "cpu_percent": 0.0, "memory_rss_bytes": 82944000, "memory_percent": 0.49058679025416024}
+{"timestamp": "2026-07-28T15:07:07.585695", "pid": 22284, "run_dir_disk_bytes": 6878, "cpu_percent": 0.0, "memory_rss_bytes": 82944000, "memory_percent": 0.49058679025416024}
+{"timestamp": "2026-07-28T15:07:08.589615", "pid": 22284, "run_dir_disk_bytes": 7054, "cpu_percent": 0.0, "memory_rss_bytes": 82944000, "memory_percent": 0.49058679025416024}
+{"timestamp": "2026-07-28T15:07:09.602606", "pid": 22284, "run_dir_disk_bytes": 7230, "cpu_percent": 0.0, "memory_rss_bytes": 82944000, "memory_percent": 0.49058679025416024}
+{"timestamp": "2026-07-28T15:07:10.610390", "pid": 22284, "run_dir_disk_bytes": 7406, "cpu_percent": 0.0, "memory_rss_bytes": 82944000, "memory_percent": 0.49058679025416024}
+{"timestamp": "2026-07-28T15:07:11.616103", "pid": 22284, "run_dir_disk_bytes": 7582, "cpu_percent": 1.6, "memory_rss_bytes": 82944000, "memory_percent": 0.49058679025416024}
+{"timestamp": "2026-07-28T15:07:12.619199", "pid": 22284, "run_dir_disk_bytes": 11663, "cpu_percent": 0.0, "memory_rss_bytes": 82964480, "memory_percent": 0.49070792279496384}
