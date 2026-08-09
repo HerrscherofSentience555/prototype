@@ -1,9 +1,0 @@
-Starting prototype training run.
-Backend: stub
-Mode: RunMode.COLD_START
-Model file: ./model.py
-Data format: random
-nproc_per_node: 1
-step=1 loss=1.0000 auc=0.5300
-Checkpoint saved: C:\Users\han\Desktop\prototype\runs\20260729-003331-63e874cf\checkpoints\step-000001
-Training completed.

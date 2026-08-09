@@ -1,7 +1,0 @@
-{
-  "backend": "stub",
-  "mode": "COLD_START",
-  "step": 1,
-  "resumed_from": null,
-  "loaded_checkpoint": null
-}

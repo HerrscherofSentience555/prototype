@@ -1,1 +1,0 @@
-{"timestamp": "2026-07-29T00:33:31.767066", "pid": 19596, "run_dir_disk_bytes": 2487, "gpu_telemetry_available": true, "gpu_count": 1, "gpu_utilization_percent": 27.0, "gpu_memory_used_mb": 706.0, "gpu_memory_total_mb": 6144.0, "wsl_telemetry_available": false, "wsl_telemetry_error": "wsl process sampling returned no data"}
