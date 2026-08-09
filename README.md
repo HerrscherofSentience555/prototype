@@ -1,128 +1,75 @@
-# TorchRec Prototype
+# TorchRec 推荐模型训练平台原型
 
-Local-first Gradio prototype for configuring, launching, monitoring, and inspecting TorchRec /
-DLRM recommendation jobs on a single machine.
+一个本地优先的 Gradio 原型工具，用于在单机环境中配置、启动、监控和检查 TorchRec / DLRM 推荐模型训练任务。
 
-This project is intentionally small and local:
+用户 clone 仓库后，只需要配置本机路径，就能通过 UI 跑通推荐模型训练 smoke 流程，并查看日志、指标、checkpoint 和运行产物。
 
-- single user
-- single machine
-- local filesystem state
-- Windows-hosted Gradio UI
-- WSL2-hosted TorchRec / DLRM execution
-- no Kubernetes
-- no external scheduler
-- no multi-user production concerns
+## 目录
 
-## Current Status
+- [项目亮点](#项目亮点)
+- [原型边界](#原型边界)
+- [快速开始](#快速开始)
+- [迁移到另一台机器](#迁移到另一台机器)
+- [UI 页面说明](#ui-页面说明)
+- [人工测试流程](#人工测试流程)
+- [数据格式说明](#数据格式说明)
+- [高级验证](#高级验证)
+- [运行产物](#运行产物)
+- [项目结构](#项目结构)
+- [质量检查](#质量检查)
+- [常见问题](#常见问题)
 
-Implemented:
+## 项目亮点
 
-- Gradio UI with Create Job, Logs, Monitor, and Artifacts tabs
-- local run directory contract
-- structured YAML config
-- task lifecycle state in `state.json`
-- `stub` backend for fast UI and lifecycle validation
-- `dlrm` backend that launches local TorchRec DLRM through WSL2
-- `custom` backend for user-provided `model.py` smoke experiments
-- `torchrec_v1` backend that launches the internal TorchRec V1 runner scaffold through WSL2
-- DLRM random-data training bridge
-- DLRM Criteo Kaggle tiny real-data smoke path
-- DLRM single-process checkpoint save/load/resume/evaluate smoke path
-- DLRM log parsing into `metrics.jsonl`
-- evaluation summary output in `evaluation.json`
-- `CUDA_VISIBLE_DEVICES` mapping from configured GPU IDs
-- WSL/GPU telemetry sampling into `resource-metrics.jsonl`
-- single active job guard to avoid local GPU contention
-- run artifact bundle export as `artifacts/run-artifacts.zip`
-- profile request, runner profile artifacts, and DLRM child-process profiler trace support
-- parquet schema validation and parquet-to-DLRM-numpy conversion CLI
-- UI-driven parquet validation/conversion from the Create Job tab
-- V1 model.py contract scaffolding for a future internal TorchRec runner
-- step time and throughput metrics for project-owned runners
-- V1 stage timing metrics and profile window activity metrics for project-owned runners
-- explicit V1 capability reports for GPU placement/cache/precision mapping
-- V1 TorchRec batch, embedding, runtime, and sharding-readiness artifacts
-- checkpoint `_SUCCESS` markers and `keep_last` pruning for project-owned checkpoints
-- local DLRM checkpoint patch verification script
-- local DLRM profiler patch verification script
-- local TorchRec V1 DMP readiness verification script for the WSL runtime
-- improved Stop Job behavior and stop metadata
+- 提供 Gradio Web UI，不需要手写完整训练命令。
+- 支持 `stub`、`custom`、`dlrm`、`torchrec_v1` 多种后端。
+- 支持 Windows UI + WSL2 TorchRec / DLRM 训练。
+- 支持本机配置文件 `local_settings.yaml`，方便不同电脑迁移。
+- 支持 Environment 页面检查本机 WSL、Python env、TorchRec、DLRM 路径和样例数据。
+- 支持 Criteo Kaggle 小样本真实数据 smoke 训练。
+- 支持日志、指标、checkpoint、profile、资源采样和运行产物查看。
+- 支持 parquet schema 校验和 parquet 到 DLRM numpy 格式转换。
+- 提供 TorchRec V1 runner scaffold，用于后续接入更完整的 TorchRec 训练链路。
 
-Important limitation:
+## 原型边界
 
-- DLRM checkpointing is currently validated for single-process smoke runs through local
-  `model.pt` / `optimizer.pt` files. Multi-process sharded production checkpointing still needs
-  Torch Distributed Checkpoint or an equivalent production checkpoint path.
-- Full Criteo Kaggle and Criteo 1TB scale runs have not been validated yet. The current real-data
-  path is a tiny Criteo smoke dataset intended to prove the end-to-end contract quickly.
-- Direct parquet training still uses a conversion step before DLRM launch.
-- The internal `torchrec_v1` backend has readiness/materialization layers, but it does not yet
-  perform a real `DistributedModelParallel` / `TrainPipelineSparseDist` training loop. The current
-  Codex environment cannot execute WSL checks because `wsl.exe` returns `WSL/Service/E_ACCESSDENIED`;
-  run the DMP readiness script from your own PowerShell session to verify the local WSL runtime.
+当前项目面向：
 
-## Project Layout
+- 单用户
+- 单机
+- 本地文件系统
+- Windows 上启动 Gradio UI
+- WSL2 Ubuntu 中执行 TorchRec / DLRM
+- 可选 Linux native shell 运行模式
 
-```text
-prototype/
-  app.py                         Gradio app entrypoint
-  config.py                      Pydantic configuration model
-  task_manager.py                local task lifecycle and subprocess management
-  requirements.txt               Windows UI/runtime dependencies
-  ui/
-    create_tab.py                job creation and config preview
-    logs_tab.py                  launcher/train logs and command viewer
-    monitor_tab.py               metrics table and plots
-    artifacts_tab.py             state/config/evaluation/artifact viewer and Stop Job
-  runner/
-    cli.py                       subprocess runner entrypoint
-    metrics.py                   JSONL metric writer
-    log_parser.py                DLRM log-to-metrics parser
-    backends/
-      stub_backend.py            simulated backend
-      dlrm_backend.py            WSL2 TorchRec DLRM backend
-      custom_backend.py          user-provided Python model contract backend
-      torchrec_v1_backend.py     WSL2 launcher for the internal TorchRec V1 runner scaffold
-    parquet_converter.py         parquet to Criteo-style numpy conversion
-    convert_parquet.py           converter CLI entrypoint
-    torchrec_runner/
-      contract.py                V1 model.py contract validator
-      entry.py                   internal TorchRec runner scaffold
-      sharding.py                TorchRec sharding planner readiness artifact
-  scripts/
-    check_windows_env.ps1        Windows environment check
-    check_wsl_dlrm.sh            WSL TorchRec/DLRM environment check
-    check_dlrm_checkpoint_patch.ps1
-                                  local DLRM checkpoint patch check
-    check_dlrm_profiler_patch.ps1
-                                  local DLRM profiler patch check
-    check_torchrec_v1_dmp_readiness.ps1
-                                  WSL TorchRec V1 DMP readiness check
-  patches/
-    README.md                    local DLRM patch notes
-  runs/                          generated local job outputs
-```
+当前项目不处理：
 
-## Environments
+- Kubernetes 集群训练
+- 外部任务调度系统
+- 多用户权限与隔离
+- 生产级资源池管理
+- 大规模 Criteo 1TB 训练验收
+- 多进程分片生产级 checkpoint
 
-The project is designed to be cloned to different machines. Keep shared defaults in git, and keep
-machine-specific paths in `local_settings.yaml`.
+需要特别注意：
 
-Typical setup:
+- 当前 DLRM checkpoint 主要验证单进程 smoke 路径，使用 `model.pt` / `optimizer.pt`。
+- DLRM 暂不直接训练 parquet，需要先转换成 DLRM numpy 格式。
+- `torchrec_v1` 后端已有 readiness/materialization 层，但还不是完整真实的 `DistributedModelParallel` / `TrainPipelineSparseDist` 训练循环。
+- `embedding_placement`、`cache_load_factor`、precision 等字段会被记录到配置和能力报告中，但当前 DLRM 示例后端没有完全映射到 DLRM 命令行。
 
-1. Windows Python virtual environment for the Gradio prototype UI.
-2. WSL2 Ubuntu environment for real TorchRec / DLRM execution.
-3. Optional Linux-native mode when the UI and TorchRec runtime are both started from Linux.
+## 快速开始
 
-Create local settings:
+### 1. 创建本机配置
+
+在仓库根目录执行：
 
 ```powershell
 Copy-Item local_settings.example.yaml local_settings.yaml
 notepad local_settings.yaml
 ```
 
-Edit only the values that are local to your machine:
+把模板中的本机路径改成自己的实际路径，例如：
 
 ```yaml
 runtime:
@@ -135,109 +82,54 @@ paths:
   criteo_binary_path: data/criteo_kaggle_sample_npy
 ```
 
-`local_settings.yaml` is ignored by git. Other users should create their own copy instead of
-editing committed source files.
+`local_settings.yaml` 已被 `.gitignore` 忽略，不会提交到仓库。
 
-## Install And Start The UI
+### 2. 安装依赖并启动 UI
 
-From PowerShell:
+推荐从仓库父目录启动，这样 `python -m prototype.app` 能正确识别包名：
 
 ```powershell
-cd <parent-folder-of-your-clone>
+cd <your-parent-folder>
 python -m venv prototype\.venv
 prototype\.venv\Scripts\Activate.ps1
 pip install -r prototype\requirements.txt
 python -m prototype.app
 ```
 
-If the virtual environment already exists:
-
-```powershell
-cd <parent-folder-of-your-clone>
-prototype\.venv\Scripts\Activate.ps1
-python -m prototype.app
-```
-
-Open the local Gradio URL shown in the terminal, usually:
+终端会输出 Gradio 地址，通常是：
 
 ```text
 http://127.0.0.1:7860
 ```
 
-## Verify WSL / DLRM Environment
+### 3. 先检查 Environment
 
-From PowerShell:
-
-```powershell
-wsl -l -v
-```
-
-Expected:
+打开 UI 后先进入 `Environment` 页面，点击：
 
 ```text
-Ubuntu-22.04    Running or Stopped    2
+Refresh Settings
+Run Environment Checks
 ```
 
-Check TorchRec / DLRM runtime:
-
-```powershell
-wsl -d Ubuntu-22.04 bash -lc "source ~/venvs/torchrec17/bin/activate; cd /mnt/c/Users/<your-name>/Desktop/dlrm; which torchrun; python -c 'import torchrec; print(\"torchrec ok\")'"
-```
-
-Expected:
+期望看到：
 
 ```text
-/home/han/venvs/torchrec17/bin/torchrun
-torchrec ok
+local_settings.yaml     OK
+settings source         OK
+WSL available           OK
+Python env              OK
+import torch            OK
+import torchrec         OK
+DLRM root               OK
+Criteo binary path      OK
+Criteo binary shapes    OK
 ```
 
-## Create Job Fields
+如果这里失败，优先修改 `local_settings.yaml`，不要改源码。
 
-Key fields in the Create Job tab:
+### 4. 跑第一个 stub 任务
 
-- `Mode`: `COLD_START`, `RESUME`, or `EVALUATE`
-- `Backend`: `stub`, `dlrm`, `custom`, or `torchrec_v1`
-- `Runtime Platform`: `windows_wsl` for Windows UI + WSL training, or `linux_native` for Linux shell training
-- `DLRM Root`: local DLRM repo path as seen by the selected runtime
-- `Python Env`: Python virtual environment as seen by the selected runtime
-- `WSL Distribution`: WSL distro name, used only by `windows_wsl`
-- `Data Format`: `random`, `criteo_binary`, `synthetic_multihot`, or `parquet`
-- `Batch Size`: DLRM/stub batch size
-- `Epochs`: training epochs
-- `Max Steps`: maps to DLRM `--limit_train_batches`
-- `Learning Rate`: maps to DLRM `--learning_rate`
-- `Processes per Node`: maps to `torchrun --nproc_per_node`
-- `GPU IDs`: maps to `CUDA_VISIBLE_DEVICES`
-- `Embedding Placement` and `Cache Load Factor`: recorded in config and capability report
-- precision fields: recorded in config and capability report
-- `Checkpoint Load Path`: required for `RESUME` and `EVALUATE`
-- `Save Checkpoints`: saves DLRM single-process smoke checkpoints when using the patched local
-  DLRM path
-- `Profile Enabled`: writes profile request/runner artifacts and passes DLRM profiler arguments
-  when using the patched local DLRM entrypoint
-
-The Create Job tab also provides:
-
-- `Validate Parquet`: validates parquet split paths and schema, then displays a JSON profile
-- `Convert Parquet`: converts parquet splits to DLRM numpy arrays, switches `Data Format` to
-  `criteo_binary`, and fills `Criteo Binary Path` with the output directory
-
-## Environment Tab
-
-Use this tab before launching jobs on a newly cloned machine.
-
-- `Refresh Settings`: shows whether the app is reading `local_settings.yaml` or the example template.
-- `Create local_settings.yaml`: copies `local_settings.example.yaml` if the local file does not exist.
-- `Run Environment Checks`: checks WSL or Linux shell access, the configured Python environment,
-  `torch` / `torchrec` imports, DLRM root, and the bundled Criteo sample numpy files.
-
-When a check fails, fix `local_settings.yaml` first, then refresh the page or rerun the checks.
-
-## Minimal Stub Validation
-
-Use this first to confirm the UI and local task lifecycle.
-
-Create Job:
+进入 `Create Job`，设置：
 
 ```text
 Backend: stub
@@ -248,31 +140,227 @@ Max Steps: 1
 Processes per Node: 1
 ```
 
-Click:
+点击：
 
 ```text
 Validate Config
 Launch Job
 ```
 
-Expected:
+任务成功后，`Artifacts` 页面中的 `state.json.status` 应为：
 
-- Launch Result shows job id, status, backend, PID, and run directory
-- Logs tab shows `train-rank0.log`
-- Monitor tab shows `train_loss` and `auc`
-- Artifacts tab shows `state.json` with `status: SUCCEEDED`
-- Logs tab can download `artifacts/run-artifacts.zip` after completion
+```text
+SUCCEEDED
+```
 
-## Minimal DLRM Training Validation
+## 迁移到另一台机器
 
-Create Job:
+这个项目的迁移方式是：**源码保持通用，本机差异写入 `local_settings.yaml`。**
+
+新机器上推荐按这个顺序：
+
+1. clone 仓库。
+2. 安装 Windows UI 虚拟环境。
+3. 准备 WSL2 Ubuntu。
+4. 在 WSL 中准备 TorchRec / DLRM Python 环境。
+5. 复制 `local_settings.example.yaml` 为 `local_settings.yaml`。
+6. 修改 `dlrm_root`、`python_env`、`wsl_distribution`。
+7. 启动 UI。
+8. 先跑 `Environment` 检查。
+9. 再跑 `stub`、`custom`、`dlrm` smoke。
+
+建议遵守：
+
+- 不要把本机绝对路径写进源码。
+- 不要提交 `local_settings.yaml`。
+- 项目内数据、schema、示例模型尽量使用相对路径。
+- 外部 DLRM 仓库路径按每台机器实际情况填写。
+
+常见 Windows + WSL 路径示例：
+
+```text
+Windows 项目路径: C:\Users\<your-name>\Desktop\prototype
+Windows DLRM 路径: C:\Users\<your-name>\Desktop\dlrm
+WSL DLRM 路径:     /mnt/c/Users/<your-name>/Desktop/dlrm
+WSL Python env:    ~/venvs/torchrec17
+WSL distro:        Ubuntu-22.04
+```
+
+## UI 页面说明
+
+### Create Job
+
+用于创建训练任务、预览 YAML 配置并启动后端。
+
+常用字段：
+
+- `Job Name`：任务名称。
+- `Mode`：`COLD_START`、`RESUME`、`EVALUATE`。
+- `Backend`：`stub`、`dlrm`、`custom`、`torchrec_v1`。
+- `Runtime Platform`：`windows_wsl` 或 `linux_native`。
+- `DLRM Root`：运行环境看到的 DLRM 仓库路径。
+- `Python Env`：运行环境中的 Python 虚拟环境。
+- `WSL Distribution`：WSL 发行版名称。
+- `Model File`：自定义模型或 TorchRec V1 模型文件。
+- `Data Format`：`random`、`criteo_binary`、`synthetic_multihot`、`parquet`。
+- `Criteo Binary Path`：Criteo numpy 数据目录。
+- `Dataset Name`：`criteo_kaggle` 或 `criteo_1t`。
+- `Batch Size` / `Test Batch Size`：训练和评估 batch size。
+- `Max Steps`：最大训练步数，对 DLRM 映射为 `--limit_train_batches`。
+- `Learning Rate`：学习率。
+- `Processes per Node`：单机 torchrun 进程数。
+- `GPU IDs`：映射为 `CUDA_VISIBLE_DEVICES`。
+- `Checkpoint Load Path`：`RESUME` 和 `EVALUATE` 模式需要填写。
+- `Save Checkpoints`：保存 smoke checkpoint。
+- `Profile Enabled`：开启 profile 请求和相关产物。
+
+常用按钮：
+
+- `Validate Config`：校验并展示最终 YAML。
+- `Launch Job`：创建 run 目录并启动任务。
+- `Validate Parquet`：校验 parquet 数据和 schema。
+- `Convert Parquet`：将 parquet 转为 DLRM numpy 格式。
+
+选项解释：
+
+`Mode` 是本项目定义的任务运行方式：
+
+- `COLD_START`：从头开始训练一个新任务。第一次训练一般选这个。
+- `RESUME`：从已有 checkpoint 继续训练。需要填写 `Checkpoint Load Path`。
+- `EVALUATE`：加载已有 checkpoint 做评估，不继续训练。需要填写 `Checkpoint Load Path`。
+
+`Backend` 是本项目定义的后端类型：
+
+- `stub`：模拟训练，不依赖 TorchRec。适合快速检查 UI、任务状态、日志、指标和产物链路。
+- `dlrm`：调用本机 WSL/Linux 中的 TorchRec DLRM。
+- `custom`：加载用户自己写的 `model.py`。适合验证自定义训练逻辑或做轻量模型实验。
+- `torchrec_v1`：项目内部的 TorchRec V1 runner scaffold。主要用于验证后续接入 TorchRec DMP/TrainPipeline 的准备情况。
+
+`Runtime Platform` 是本项目定义的运行环境选择：
+
+- `windows_wsl`：Windows 上打开 UI，训练命令通过 WSL 执行。当前主要测试路径是这个。
+- `linux_native`：UI 和训练命令都在 Linux shell 中运行。适合把项目整体放到 Linux 环境时使用。
+
+`Data Format` 是本项目对训练数据入口的约定：
+
+- `random`：随机数据，用来快速确认任务能启动。
+- `criteo_binary`：DLRM 可直接读取的 Criteo numpy 数据，真实小数据 smoke 用这个。
+- `synthetic_multihot`：合成 multi-hot Criteo 风格数据，适合做数据管线 smoke。
+- `parquet`：业务表格数据格式。当前不能直接给 DLRM 训练，需要先通过 `Convert Parquet` 转成 `criteo_binary`。
+
+其他字段：
+
+- `Embedding Placement`：记录 embedding 放置策略。当前 DLRM 示例后端主要记录该配置，不完整映射到 DLRM 命令行。
+- `Cache Load Factor`：记录 GPU cache 相关比例。当前主要进入配置和能力报告。
+- precision 字段：记录 embedding、dense compute、通信前向/反向的精度意图。当前主要进入配置和能力报告。
+- `Checkpoint Load Path`：已有 checkpoint 目录，通常形如 `runs/<job_id>/checkpoints/step-final`。
+- `Save Checkpoints`：保存本项目 smoke checkpoint，不等同于生产级分布式 checkpoint。
+- `Profile Enabled`：开启 profile 请求和相关产物，主要用于观察耗时和 trace，不会自动优化模型。
+
+### Environment
+
+用于检查当前机器是否已经准备好。
+
+- `Refresh Settings`：显示当前读取的本机配置。
+- `Create local_settings.yaml`：从模板生成本机配置。
+- `Run Environment Checks`：检查 WSL/Linux shell、Python env、`torch`、`torchrec`、DLRM root 和 Criteo 样例数据。
+
+### Logs
+
+用于查看任务日志和实际命令。
+
+- `launcher.log`：runner 启动日志和异常栈。
+- `train-rank0.log`：训练主日志。
+- `command.json`：UI runner 命令和后端实际命令。
+- tail line count：控制日志显示尾部行数。
+
+### Monitor
+
+用于查看训练指标。
+
+- 展示 `metrics.jsonl` 中的最近记录。
+- 展示 loss、AUC、throughput、step time、stage timing 等图表。
+- 没有指标时显示空状态。
+
+### Artifacts
+
+用于查看运行产物。
+
+- `state.json`
+- `resolved-config.yaml`
+- `evaluation.json`
+- checkpoint 文件
+- profile 文件
+- artifact 文件
+- `run-artifacts.zip`
+- Stop Job 操作
+
+### Compare
+
+用于对比多个 run 的指标和摘要，适合观察不同参数、不同数据设置下的 smoke 结果。
+
+## 人工测试流程
+
+建议按下面顺序测试。前两步证明 UI 和任务系统正常，后两步证明真实 TorchRec / DLRM 路径可用。
+
+### 1. Environment 检查
+
+期望所有核心项为 `OK`：
+
+```text
+local_settings.yaml
+settings source
+WSL available
+Python env
+import torch
+import torchrec
+DLRM root
+Criteo binary path
+Criteo binary shapes
+```
+
+### 2. stub smoke
+
+```text
+Backend: stub
+Mode: COLD_START
+Data Format: random
+Batch Size: 4
+Max Steps: 1
+Processes per Node: 1
+```
+
+期望：
+
+- 任务最终 `SUCCEEDED`。
+- Logs 页面能看到 `train-rank0.log`。
+- Monitor 页面能看到基础指标。
+- Artifacts 页面能看到 `state.json` 和 `run-artifacts.zip`。
+
+### 3. custom smoke
+
+```text
+Backend: custom
+Model File: examples/models/custom_simple_model.py
+Data Format: random
+Batch Size: 4
+Max Steps: 2
+Save Checkpoints: true
+```
+
+期望：
+
+- 任务最终 `SUCCEEDED`。
+- `metrics.jsonl` 包含自定义模型返回的指标。
+- `artifacts/custom-model-contract.json` 存在。
+- 开启 checkpoint 时会生成 checkpoint 文件。
+
+### 4. DLRM 随机数据 smoke
 
 ```text
 Backend: dlrm
 Mode: COLD_START
-DLRM Root: /mnt/c/Users/<your-name>/Desktop/dlrm
-Python Env: ~/venvs/torchrec17
-WSL Distribution: Ubuntu-22.04
+Runtime Platform: windows_wsl
 Data Format: random
 Batch Size: 4
 Max Steps: 1
@@ -280,47 +368,141 @@ Processes per Node: 1
 Learning Rate: 0.01
 ```
 
-Expected:
+期望：
 
-- `command.json` contains `backend_command`
-- `backend_command` invokes `wsl`, activates the venv, changes into DLRM root, and runs `torchrun`
-- `train-rank0.log` contains real DLRM output
-- `metrics.jsonl` contains parsed metrics such as `val_auc` and `test_auc`
-- `state.json.status` becomes `SUCCEEDED`
+- `command.json` 包含 `backend_command`。
+- 后端命令调用 `wsl`、激活 venv、进入 DLRM root，并执行 `torchrun`。
+- `train-rank0.log` 有真实 DLRM 输出。
+- `state.json.status` 最终为 `SUCCEEDED`。
 
-## Custom Model Validation
+### 5. DLRM 真实小数据 smoke
 
-Use the custom backend when you want to test a local Python model contract before integrating a full
-TorchRec training loop.
-
-Example config:
+使用项目内小样本：
 
 ```text
-examples/custom-model-smoke.yaml
+data/criteo_kaggle_sample_npy
 ```
 
-Expected model file contract:
+推荐配置：
 
-```python
-def train_step(step: int, config: dict) -> dict[str, float]:
-    ...
-
-def evaluate(config: dict, checkpoint: dict) -> dict[str, float]:
-    ...
+```text
+Backend: dlrm
+Mode: COLD_START
+Data Format: criteo_binary
+Criteo Binary Path: data/criteo_kaggle_sample_npy
+Dataset Name: criteo_kaggle
+Batch Size: 16
+Test Batch Size: 16
+Max Steps: 100
+Processes per Node: 1
+Save Checkpoints: true
 ```
 
-Expected:
+期望：
 
-- `train-rank0.log` records custom backend execution
-- `metrics.jsonl` contains metrics returned by `train_step` or `evaluate`
-- `metrics.jsonl` also contains `step_time_seconds`, `samples_per_second`, and
-  `batches_per_second` for training steps
-- `artifacts/custom-model-contract.json` records the loaded model path and supported functions
-- checkpoint files are created for COLD_START/RESUME when checkpoint saving is enabled
+- `state.json.status` 为 `SUCCEEDED`。
+- `train-rank0.log` 包含 `Total number of iterations`。
+- `train-rank0.log` 包含 `AUROC over val set` 和 `AUROC over test set`。
+- `metrics.jsonl` 包含 `total_iterations`、`val_auc`、`test_auc`、`val_samples`、`test_samples`。
+- `checkpoints/step-final/model.pt` 存在。
+- `checkpoints/step-final/_SUCCESS` 存在。
 
-## TorchRec V1 Model Contract Validation
+### 6. checkpoint / evaluate smoke
 
-The internal TorchRec runner scaffold validates a stricter V1 `model.py` contract:
+先运行一次 DLRM 训练，并确认：
+
+```text
+runs/<job_id>/checkpoints/step-final/model.pt
+runs/<job_id>/checkpoints/step-final/_SUCCESS
+```
+
+再新建评估任务：
+
+```text
+Backend: dlrm
+Mode: EVALUATE
+Data Format: criteo_binary
+Criteo Binary Path: data/criteo_kaggle_sample_npy
+Dataset Name: criteo_kaggle
+Batch Size: 16
+Test Batch Size: 16
+Processes per Node: 1
+Checkpoint Load Path: runs/<job_id>/checkpoints/step-final
+```
+
+期望：
+
+- 空 `Checkpoint Load Path` 会被配置校验拒绝。
+- 非空 checkpoint path 可以启动任务。
+- `command.json` 包含 `--limit_train_batches 0`。
+- `command.json` 包含 `--checkpoint_load_path`。
+- `evaluation.json` 被创建。
+- `metrics.jsonl` 包含评估指标。
+
+## 数据格式说明
+
+### `random`
+
+随机数据，主要用于验证任务流程和 DLRM 命令桥接。
+
+适合：
+
+- 初次检查后端能不能启动。
+- 检查日志、状态、指标是否写入。
+
+### `criteo_binary`
+
+DLRM 可以直接读取的 Criteo numpy 格式。项目内小样本路径为：
+
+```text
+data/criteo_kaggle_sample_npy
+```
+
+通常包含：
+
+```text
+train_dense.npy
+train_sparse.npy
+train_labels.npy
+```
+
+适合：
+
+- 真实数据 smoke。
+- checkpoint/evaluate smoke。
+- 手工观察小数据训练日志和指标。
+
+### `parquet`
+
+Parquet 是业务系统和数据仓库常用的列式表格文件格式。它适合存储 CTR 类表格数据，但当前 DLRM 后端不直接训练 parquet。
+
+当前流程是：
+
+```text
+parquet 数据
+  -> schema 校验
+  -> 转换为 Criteo numpy
+  -> 使用 criteo_binary 训练
+```
+
+转换命令：
+
+```powershell
+cd <path-to-your-prototype-clone>
+python -m prototype.runner.convert_parquet --config examples\parquet-conversion-smoke.yaml --output-dir data\converted_criteo_npy
+```
+
+期望：
+
+- 生成 `<split>_dense.npy`、`<split>_sparse.npy`、`<split>_labels.npy`。
+- `conversion-manifest.json` 记录输入、schema、split、行数和输出文件。
+- 输出目录可作为 `Criteo Binary Path`。
+
+## 高级验证
+
+### TorchRec V1 model.py contract
+
+内部 TorchRec runner scaffold 要求模型文件至少提供：
 
 ```python
 def build_model(config: dict):
@@ -330,7 +512,7 @@ def build_embedding_configs(config: dict) -> list:
     ...
 ```
 
-Optional functions:
+可选函数：
 
 ```text
 build_optimizer
@@ -339,13 +521,13 @@ train_step
 evaluate
 ```
 
-Example:
+示例文件：
 
 ```text
 examples/models/torchrec_v1_model.py
 ```
 
-Validation artifacts:
+常见产物：
 
 ```text
 artifacts/torchrec-model-contract.json
@@ -359,9 +541,7 @@ artifacts/torchrec-runner-status.json
 artifacts/torchrec-v1-capability-report.json
 ```
 
-## Minimal TorchRec V1 Backend Validation
-
-Create Job:
+### TorchRec V1 后端 smoke
 
 ```text
 Backend: torchrec_v1
@@ -373,50 +553,13 @@ Max Steps: 1
 Processes per Node: 1
 ```
 
-Expected:
+期望：
 
-- `command.json` invokes WSL, activates the WSL TorchRec env, and runs
-  `torchrun -m prototype.runner.torchrec_runner.entry`
-- `artifacts/torchrec-model-contract.json` exists
-- `artifacts/torchrec-data-plan.json` exists and records dense/sparse/label batch schema
-- `artifacts/torchrec-batch-materialization.json` exists and records whether real torch tensors
-  and TorchRec `KeyedJaggedTensor` were created
-- `artifacts/torchrec-embedding-configs.json` exists and records embedding config descriptions
-- `artifacts/torchrec-runtime-smoke.json` exists and reports whether the run is ready for a DMP
-  smoke test
-- `artifacts/torchrec-sharding-plan-readiness.json` exists and reports planner import/topology
-  readiness without falsely claiming a collective sharding plan
-- `artifacts/torchrec-training-plan.json` exists and marks DMP/TrainPipeline steps as planned
-- `artifacts/torchrec-runner-status.json` exists
-- `metrics.jsonl` contains minimal-loop metrics
-- checkpoint `_SUCCESS` is written when checkpoint saving is enabled
+- `command.json` 调用 WSL。
+- 后端执行 `torchrun -m prototype.runner.torchrec_runner.entry`。
+- TorchRec V1 contract、data plan、batch materialization、embedding configs、runtime smoke 等 artifact 被写出。
 
-## Parquet Conversion Validation
-
-Use this path for business-style CTR parquet data before launching DLRM.
-
-```powershell
-cd <path-to-your-prototype-clone>
-python -m prototype.runner.convert_parquet --config examples\parquet-conversion-smoke.yaml --output-dir data\converted_criteo_npy
-```
-
-The config must use `data.format=parquet` and point at a schema YAML with:
-
-```text
-label
-dense_features
-sparse_features
-```
-
-Expected:
-
-- `<split>_dense.npy`, `<split>_sparse.npy`, and `<split>_labels.npy` are created
-- `conversion-manifest.json` records source files, schema, split names, row counts, and output files
-- the output directory can be used as `Criteo Binary Path` with `Data Format=criteo_binary`
-
-## Local DLRM Patch Check
-
-Run:
+### DLRM patch 检查
 
 ```powershell
 cd <path-to-your-prototype-clone>
@@ -424,90 +567,27 @@ powershell -ExecutionPolicy Bypass -File scripts\check_dlrm_checkpoint_patch.ps1
 powershell -ExecutionPolicy Bypass -File scripts\check_dlrm_profiler_patch.ps1
 ```
 
-Expected:
+期望：
 
 ```text
 DLRM checkpoint patch is present.
 DLRM profiler patch is present.
 ```
 
-## Profile Validation
-
-Create a short stub or DLRM job with `Profile Enabled=true`.
-
-Expected:
-
-- `profiles/profile-request.json` exists
-- `profiles/runner-profile.json` exists
-- `profiles/trace.json` exists when `torch.profiler` is available in the Windows runner environment
-- `runner-profile.json.profile_trace_error` explains the fallback when torch is not installed
-- DLRM runs pass `--profile_dir`, `--profile_record_shapes`, and `--profile_memory`
-- patched DLRM runs can create `profiles/dlrm/rank<N>-trace.json`
-- torchrun rank logs are redirected under `logs/`
-
-## Throughput And Step-Time Validation
-
-Run a stub or custom job with at least one training step.
-
-Expected:
-
-- `metrics.jsonl` contains `step_time_seconds`
-- `metrics.jsonl` contains `samples_per_second`
-- `metrics.jsonl` contains `batches_per_second`
-- `metrics.jsonl` contains stage timing metrics such as `embedding_lookup_seconds`,
-  `backward_seconds`, and `optimizer_seconds`
-- `metrics.jsonl` contains `profile_window_active`
-- Monitor tab shows `Throughput` and `Step Time` plots after refreshing metrics
-- Monitor tab shows `Stage Timing` after refreshing metrics
-
-## V1 Capability Report Validation
-
-Every launched job writes:
-
-```text
-artifacts/v1-capability-report.json
-```
-
-Expected:
-
-- requested GPU IDs, embedding placement, cache load factor, and precision fields are recorded
-- mapped fields show what the selected backend actually applies
-- `not_yet_mapped` explains GPU Cache, precision, DMP, or internal-runner gaps when applicable
-
-## V1 Runner Artifact Views
-
-The Artifacts tab displays these JSON artifacts directly:
-
-- `artifacts/v1-capability-report.json`
-- `artifacts/torchrec-model-contract.json`
-- `artifacts/torchrec-data-plan.json`
-- `artifacts/torchrec-batch-materialization.json`
-- `artifacts/torchrec-embedding-configs.json`
-- `artifacts/torchrec-runtime-smoke.json`
-- `artifacts/torchrec-sharding-plan-readiness.json`
-- `artifacts/torchrec-training-plan.json`
-
-Use these views to verify whether a run is still on the minimal loop or has moved to real
-TorchRec DMP / TrainPipeline execution.
-
-## TorchRec V1 DMP Readiness Check
-
-Before claiming real `DistributedModelParallel` execution is ready, run this from PowerShell:
+### TorchRec V1 DMP readiness 检查
 
 ```powershell
 cd <path-to-your-prototype-clone>
 powershell -ExecutionPolicy Bypass -File scripts\check_torchrec_v1_dmp_readiness.ps1
 ```
 
-Expected:
+期望：
 
-- the script exits with code `0`
-- JSON output reports `true` for torch, torchrec, DMP, sharding planner, train pipeline, and
-  distributed checkpoint checks
-- if it exits non-zero, the JSON `errors` array is the next blocker to solve before a real DMP
-  smoke run
+- 脚本退出码为 `0`。
+- JSON 输出中 torch、torchrec、DMP、sharding planner、train pipeline、distributed checkpoint 检查为 true。
+- 如果退出非零，JSON 中的 `errors` 是下一步 blocker。
 
-Optional environment overrides:
+可选环境变量：
 
 ```powershell
 $env:TORCHREC_WSL_DISTRO = "Ubuntu-22.04"
@@ -515,137 +595,42 @@ $env:TORCHREC_PYTHON_ENV = "~/venvs/torchrec17"
 powershell -ExecutionPolicy Bypass -File scripts\check_torchrec_v1_dmp_readiness.ps1
 ```
 
-## GPU And WSL Telemetry Validation
+### profile 验证
 
-Run a short job and inspect:
+启动一个短任务，并设置：
+
+```text
+Profile Enabled: true
+```
+
+期望：
+
+- `profiles/profile-request.json` 存在。
+- `profiles/runner-profile.json` 存在。
+- Windows runner 环境有 torch 时，可能生成 `profiles/trace.json`。
+- Windows runner 环境没有 torch 时，`runner-profile.json.profile_trace_error` 会说明 fallback 原因。
+- DLRM 任务会传递 `--profile_dir`、`--profile_record_shapes`、`--profile_memory`。
+- patched DLRM 可以生成 `profiles/dlrm/rank<N>-trace.json`。
+
+### GPU / WSL 资源采样
+
+运行一个短任务后检查：
 
 ```text
 runs/<job_id>/resource-metrics.jsonl
 runs/<job_id>/artifacts/resource-summary.json
 ```
 
-Expected:
+期望：
 
-- records include `gpu_telemetry_available`
-- records include GPU utilization and memory fields when `nvidia-smi` is available
-- records include `wsl_telemetry_available`
-- WSL process fields are populated while Python/torchrun processes are visible inside WSL
+- 记录中包含 `gpu_telemetry_available`。
+- 如果 `nvidia-smi` 可用，会包含 GPU 利用率和显存字段。
+- 记录中包含 `wsl_telemetry_available`。
+- WSL 中可见 Python/torchrun 进程时，会填充 WSL 进程资源字段。
 
-## Minimal DLRM Real-Data Validation
+## 运行产物
 
-Preprocessed tiny Criteo sample:
-
-```text
-data/criteo_kaggle_sample_npy
-```
-
-Create Job:
-
-```text
-Backend: dlrm
-Mode: COLD_START
-Data Format: criteo_binary
-Criteo Binary Path: data/criteo_kaggle_sample_npy
-Dataset Name: criteo_kaggle
-Batch Size: 4
-Test Batch Size: 4
-Max Steps: 1
-Processes per Node: 1
-```
-
-Expected:
-
-- `state.json.status` becomes `SUCCEEDED`
-- `train-rank0.log` contains `AUROC over val set` and `AUROC over test set`
-- `metrics.jsonl` contains `val_auc`, `test_auc`, `val_samples`, and `test_samples`
-- `checkpoints/step-final/model.pt` is created when checkpoint saving is enabled
-- `checkpoints/step-final/_SUCCESS` is created after the DLRM smoke checkpoint is finalized
-
-Validated smoke run:
-
-```text
-runs/20260728-150552-7e92c28f
-```
-
-## Minimal DLRM Checkpoint Validation
-
-Create Job:
-
-```text
-Backend: dlrm
-Mode: EVALUATE
-Data Format: criteo_binary
-Criteo Binary Path: data/criteo_kaggle_sample_npy
-Dataset Name: criteo_kaggle
-Batch Size: 4
-Max Steps: 1
-Processes per Node: 1
-Checkpoint Load Path: runs/<job_id>/checkpoints/step-final
-```
-
-Expected:
-
-- empty Checkpoint Load Path is rejected
-- non-empty Checkpoint Load Path allows launch
-- `command.json` contains `--limit_train_batches 0`
-- `command.json` contains `--checkpoint_load_path`
-- `train-rank0.log` contains `Loaded checkpoint from`
-- `evaluation.json` is created
-- `evaluation.json.source_checkpoint` matches the UI checkpoint path
-- `evaluation.json.checkpoint_load_supported` is `true`
-- `metrics.jsonl` contains parsed evaluation metrics when DLRM prints them
-
-Validated smoke runs:
-
-```text
-EVALUATE: runs/20260728-150905-887685af
-RESUME:   runs/20260728-150919-da311650
-```
-
-## Tabs
-
-### Create Job
-
-Builds a `PrototypeConfig`, previews it as YAML, creates a run directory, and launches the selected
-backend.
-
-### Environment
-
-Shows the active local settings file and runs portability checks for the selected machine.
-
-### Logs
-
-Shows:
-
-- job dropdown as `<job_id> [<status>]`
-- `launcher.log`
-- `train-rank0.log`
-- `command.json`
-- configurable tail line count
-
-### Monitor
-
-Shows:
-
-- recent metric records from `metrics.jsonl`
-- Train Loss line plot
-- AUC line plot
-- clear empty state when no metrics are available
-
-### Artifacts
-
-Shows:
-
-- run directory
-- `state.json`
-- `resolved-config.yaml`
-- `evaluation.json`
-- checkpoint/profile/artifact file lists
-- Stop Job action
-
-## Run Directory Contract
-
-Each job writes to:
+每个任务写入：
 
 ```text
 runs/<job_id>/
@@ -653,22 +638,24 @@ runs/<job_id>/
   state.json
   launcher.log
   train-rank0.log
-  logs/
+  command.json
   metrics.jsonl
   evaluation.json
-  command.json
+  logs/
   checkpoints/
-    step-000001/
+    step-final/
+      model.pt
+      optimizer.pt
+      metadata.json
       _SUCCESS
   profiles/
   artifacts/
+    run-artifacts.zip
 ```
 
-Some files are mode-dependent. For example, `evaluation.json` may be absent for a training-only job.
+有些文件与运行模式有关。例如训练任务不一定有 `evaluation.json`，未开启 checkpoint 时不会有 `model.pt`。
 
-## Task States
-
-Common states:
+常见任务状态：
 
 ```text
 CREATED
@@ -680,84 +667,136 @@ SUCCEEDED
 FAILED
 ```
 
-`state.json` also records fields such as:
+`state.json` 还会记录 backend、command、cwd、pid、error_message、时间戳、duration、exit_code 和 stop metadata。
 
-- backend
-- command
-- cwd
-- pid
-- error_message
-- timestamps
-- duration_seconds
-- exit_code
-- stop metadata
+## 项目结构
 
-## Stop Job Behavior
+```text
+prototype/
+  app.py                         Gradio 应用入口
+  config.py                      Pydantic 配置模型
+  local_settings.py              本机配置读取逻辑
+  local_settings.example.yaml    本机配置模板
+  task_manager.py                本地任务生命周期和子进程管理
+  requirements.txt               Windows UI/runtime 依赖
+  ui/
+    create_tab.py                创建任务和预览配置
+    environment_tab.py           本机环境检查
+    logs_tab.py                  日志和命令查看
+    monitor_tab.py               指标表格和图表
+    artifacts_tab.py             状态、配置、评估、产物查看和停止任务
+    compare_tab.py               运行对比
+  runner/
+    cli.py                       子进程 runner 入口
+    metrics.py                   JSONL 指标写入
+    log_parser.py                DLRM 日志指标解析
+    backends/
+      stub_backend.py            模拟后端
+      dlrm_backend.py            WSL2 TorchRec DLRM 后端
+      custom_backend.py          用户自定义 Python 模型后端
+      torchrec_v1_backend.py     TorchRec V1 runner scaffold 启动器
+      runtime_env.py             Windows/WSL/Linux 路径与命令适配
+    parquet_converter.py         parquet 到 Criteo 风格 numpy 转换
+    convert_parquet.py           转换 CLI 入口
+    torchrec_runner/
+      contract.py                V1 model.py contract 校验
+      entry.py                   内部 TorchRec runner scaffold
+      sharding.py                TorchRec sharding planner readiness 产物
+  examples/                      smoke 配置和示例模型
+  scripts/                       环境、patch、readiness 检查脚本
+  patches/                       本地 DLRM patch 说明
+  runs/                          本地任务运行产物
+```
 
-Stop Job:
+## 质量检查
 
-- does not overwrite already completed `SUCCEEDED` or `FAILED` jobs
-- moves active jobs to `STOPPING`
-- sends a graceful termination signal
-- force kills the process tree if needed
-- records `stopped_at`, `stop_reason`, `stop_signal`, `force_killed`, and `stop_error`
-
-## Quality Checks
-
-Run:
+运行：
 
 ```powershell
 cd <path-to-your-prototype-clone>
-python -m compileall config.py task_manager.py runner ui
+python -m compileall app.py config.py local_settings.py task_manager.py runner ui tests
 python -m unittest discover -s tests
 powershell -ExecutionPolicy Bypass -File scripts\check_dlrm_checkpoint_patch.ps1
 powershell -ExecutionPolicy Bypass -File scripts\check_dlrm_profiler_patch.ps1
 ```
 
-If using the project venv:
+如果使用项目虚拟环境：
 
 ```powershell
 cd <path-to-your-prototype-clone>
-.\.venv\Scripts\python.exe -m compileall config.py task_manager.py runner ui
+.\.venv\Scripts\python.exe -m compileall app.py config.py local_settings.py task_manager.py runner ui tests
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
 
-## Troubleshooting
+## 常见问题
 
 ### `ModuleNotFoundError: No module named 'gradio'`
 
-Activate the project venv and install dependencies:
+说明当前 Python 环境没有安装 UI 依赖。激活项目虚拟环境并安装依赖：
 
 ```powershell
-cd <parent-folder-of-your-clone>
+cd <your-parent-folder>
 prototype\.venv\Scripts\Activate.ps1
 pip install -r prototype\requirements.txt
 ```
 
+### `ModuleNotFoundError: No module named 'prototype'`
+
+通常是启动目录不对。请从仓库父目录运行：
+
+```powershell
+cd <your-parent-folder>
+prototype\.venv\Scripts\Activate.ps1
+python -m prototype.app
+```
+
 ### `WSL_E_DISTRO_NOT_FOUND`
 
-Check the distro name:
+检查 WSL 发行版名称：
 
 ```powershell
 wsl -l -v
 ```
 
-Then set `WSL Distribution` in the UI to the exact distro name.
+然后把 UI 或 `local_settings.yaml` 里的 `WSL Distribution` 改成完全一致的名称。
 
-### DLRM job fails before training
+### Environment 页面里 `DLRM root` 为 MISSING
 
-Check:
+通常是 `local_settings.yaml` 还在使用模板占位：
+
+```text
+/mnt/c/Users/<your-name>/Desktop/dlrm
+```
+
+请改成本机真实路径，例如：
+
+```text
+/mnt/c/Users/han/Desktop/dlrm
+```
+
+### DLRM 任务启动前失败
+
+优先检查：
 
 - `command.json`
 - `launcher.log`
 - `train-rank0.log`
-- WSL distro name
+- WSL 发行版名称
 - `Python Env`
 - `DLRM Root`
+- `Criteo Binary Path`
 
-### Monitor has no DLRM metrics
+如果日志里出现：
 
-Check whether `train-rank0.log` contains parseable lines such as:
+```text
+cd '/mnt/c/Users/<your-name>/Desktop/dlrm'
+```
+
+说明还没有配置本机 DLRM 路径。
+
+### Monitor 没有 DLRM 指标
+
+先看 `train-rank0.log` 是否包含可解析的指标行：
 
 ```text
 AUROC over val set: ...
@@ -765,16 +804,15 @@ AUROC over test set: ...
 Number of val samples: ...
 ```
 
-If the log has no metric-like lines, `metrics.jsonl` may be empty even though the job ran.
+如果日志没有这些行，`metrics.jsonl` 可能为空，即使任务已经启动过。
 
-### DLRM checkpoint load fails
+### DLRM checkpoint 加载失败
 
-Check:
+检查：
 
-- `Checkpoint Load Path` points to a checkpoint directory containing `model.pt`
-- the new run uses the same DLRM model shape as the checkpoint run
-- `Processes per Node` is `1` for the current smoke checkpoint path
-- `train-rank0.log` contains the underlying `torch.load` or `load_state_dict` error
+- `Checkpoint Load Path` 是否指向包含 `model.pt` 的目录。
+- 新任务的模型结构是否和 checkpoint 对应任务一致。
+- 当前 smoke checkpoint 路径建议 `Processes per Node=1`。
+- `train-rank0.log` 中是否有 `torch.load` 或 `load_state_dict` 错误。
 
-Current checkpoint support is intended for single-process smoke validation. Multi-process sharded
-checkpointing still needs a production Torch Distributed Checkpoint implementation.
+当前 checkpoint 支持主要用于单进程 smoke 验证。多进程分片 checkpoint 需要生产级 Torch Distributed Checkpoint 实现。

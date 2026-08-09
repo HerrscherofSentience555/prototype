@@ -16,6 +16,7 @@ from prototype.local_settings import (
     local_settings_status,
     write_local_settings_template,
 )
+from prototype.runner.backends.dlrm_backend import clean_dlrm_log_text
 from prototype.runner.backends.runtime_env import to_runtime_path, to_shell_path_literal
 
 
@@ -69,13 +70,13 @@ def _check_runtime_platform(platform: str) -> dict[str, str]:
         return _row(
             "WSL available",
             "OK" if completed.returncode == 0 else "ERROR",
-            completed.output.strip() or f"exit code {completed.returncode}",
+            _clean_check_detail(completed.output) or f"exit code {completed.returncode}",
         )
     completed = _run(["bash", "-lc", "echo linux_native"], timeout=10)
     return _row(
         "Linux shell",
         "OK" if completed.returncode == 0 else "ERROR",
-        completed.output.strip() or f"exit code {completed.returncode}",
+        _clean_check_detail(completed.output) or f"exit code {completed.returncode}",
     )
 
 
@@ -87,7 +88,7 @@ def _check_python_env(platform: str, distro: str, python_env: str) -> dict[str, 
     return _row(
         "Python env",
         "OK" if completed.returncode == 0 else "MISSING",
-        python_env if completed.returncode == 0 else completed.output.strip(),
+        python_env if completed.returncode == 0 else _clean_check_detail(completed.output),
     )
 
 
@@ -102,7 +103,7 @@ def _check_python_import(platform: str, distro: str, python_env: str, module: st
     return _row(
         f"import {module}",
         "OK" if completed.returncode == 0 else "ERROR",
-        completed.output.strip(),
+        _success_tail(completed.output) if completed.returncode == 0 else _clean_check_detail(completed.output),
     )
 
 
@@ -177,6 +178,26 @@ def _run(args: list[str], timeout: int) -> _Completed:
         return _Completed(completed.returncode, completed.stdout)
     except Exception as exc:
         return _Completed(1, f"{type(exc).__name__}: {exc}")
+
+
+def _clean_check_detail(output: str) -> str:
+    cleaned = clean_dlrm_log_text(output.replace("\x00", ""))
+    lines = []
+    for line in cleaned.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if stripped.startswith("wsl: detected localhost proxy configuration"):
+            continue
+        lines.append(stripped)
+    return " ".join(lines)
+
+
+def _success_tail(output: str) -> str:
+    cleaned = _clean_check_detail(output)
+    if not cleaned:
+        return "ok"
+    return cleaned.split()[-1]
 
 
 def _runtime_config(platform: str, distro: str, python_env: str) -> PrototypeConfig:
