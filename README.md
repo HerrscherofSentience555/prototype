@@ -771,7 +771,7 @@ wsl -l -v
 请改成本机真实路径，例如：
 
 ```text
-/mnt/c/Users/han/Desktop/dlrm
+/mnt/c/Users/<windows-user>/Desktop/dlrm
 ```
 
 ### DLRM 任务启动前失败
