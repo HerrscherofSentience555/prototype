@@ -8,6 +8,13 @@ from pathlib import Path
 
 from prototype.config import PrototypeConfig
 from prototype.runner.backends.base import RunnerBackend
+from prototype.runner.backends.runtime_env import (
+    DESKTOP_ROOT,
+    build_shell_command,
+    to_runtime_path,
+    to_shell_path_literal,
+    to_wsl_path,
+)
 
 
 class TorchRecV1Backend(RunnerBackend):
@@ -48,10 +55,10 @@ class TorchRecV1Backend(RunnerBackend):
         return exit_code
 
     def build_command(self, config: PrototypeConfig, run_dir: Path) -> list[str]:
-        desktop_root = self._to_wsl_path(str(Path(__file__).resolve().parents[3]))
-        python_env = self._to_wsl_shell_path(config.backend.python_env.rstrip("/"))
-        run_dir_wsl = self._to_wsl_path(str(run_dir))
-        config_path_wsl = self._to_wsl_path(str(run_dir / "resolved-config.yaml"))
+        desktop_root = to_runtime_path(config, str(DESKTOP_ROOT))
+        python_env = to_shell_path_literal(config, config.backend.python_env.rstrip("/"))
+        run_dir_runtime = to_runtime_path(config, str(run_dir))
+        config_path_runtime = to_runtime_path(config, str(run_dir / "resolved-config.yaml"))
         cuda_visible_devices = ",".join(str(gpu_id) for gpu_id in config.device.gpu_ids)
         torchrun_args = [
             "torchrun",
@@ -59,7 +66,7 @@ class TorchRecV1Backend(RunnerBackend):
             "--nnodes=1",
             f"--nproc_per_node={config.nproc_per_node}",
             "--log_dir",
-            self._to_wsl_path(str(run_dir / "logs")),
+            to_runtime_path(config, str(run_dir / "logs")),
             "--redirects",
             "3",
             "--tee",
@@ -67,9 +74,9 @@ class TorchRecV1Backend(RunnerBackend):
             "-m",
             "prototype.runner.torchrec_runner.entry",
             "--config",
-            config_path_wsl,
+            config_path_runtime,
             "--run-dir",
-            run_dir_wsl,
+            run_dir_runtime,
         ]
         shell_script = "; ".join(
             [
@@ -83,14 +90,7 @@ class TorchRecV1Backend(RunnerBackend):
                 "exec " + " ".join(shlex.quote(part) for part in torchrun_args),
             ]
         )
-        return [
-            "wsl",
-            "-d",
-            config.backend.wsl_distribution,
-            "bash",
-            "-lc",
-            shell_script,
-        ]
+        return build_shell_command(config, shell_script)
 
     def _record_backend_command(self, run_dir: Path, command: list[str]) -> None:
         command_path = run_dir / "command.json"
@@ -135,14 +135,7 @@ class TorchRecV1Backend(RunnerBackend):
         )
 
     def _to_wsl_path(self, path: str) -> str:
-        normalized = path.replace("\\", "/")
-        if len(normalized) >= 3 and normalized[1:3] == ":/":
-            drive = normalized[0].lower()
-            return f"/mnt/{drive}{normalized[2:]}"
-        return normalized
+        return to_wsl_path(path)
 
     def _to_wsl_shell_path(self, path: str) -> str:
-        normalized = self._to_wsl_path(path)
-        if normalized.startswith("~/"):
-            return "$HOME/" + normalized[2:]
-        return shlex.quote(normalized)
+        return to_shell_path_literal(PrototypeConfig(backend={"name": "torchrec_v1"}), path)

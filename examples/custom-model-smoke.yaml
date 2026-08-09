@@ -2,12 +2,13 @@ job_name: custom-model-smoke
 mode: COLD_START
 backend:
   name: custom
-  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  runtime_platform: windows_wsl
+  dlrm_root: /mnt/c/Users/<your-name>/Desktop/dlrm
   python_env: ~/venvs/torchrec17
   wsl_distribution: Ubuntu-22.04
 nproc_per_node: 1
 model:
-  file: C:\Users\han\Desktop\prototype\examples\models\custom_simple_model.py
+  file: examples/models/custom_simple_model.py
 data:
   format: random
   batch_size: 4

@@ -1,0 +1,26 @@
+runtime:
+  platform: windows_wsl
+  wsl_distribution: Ubuntu-22.04
+  python_env: ~/venvs/torchrec17
+
+paths:
+  dlrm_root: /mnt/c/Users/<your-name>/Desktop/dlrm
+  default_model_file: examples/models/torchrec_v1_model.py
+  criteo_binary_path: data/criteo_kaggle_sample_npy
+  synthetic_multi_hot_path: ""
+  parquet_train_path: data/business_ctr/train.parquet
+  parquet_validation_path: data/business_ctr/validation.parquet
+  parquet_test_path: data/business_ctr/test.parquet
+  parquet_schema_path: examples/schemas/parquet-smoke-schema.yaml
+  parquet_conversion_output: data/converted_criteo_npy
+
+defaults:
+  backend: dlrm
+  data_format: criteo_binary
+  dataset_name: criteo_kaggle
+  batch_size: 16
+  test_batch_size: 16
+  max_steps: 100
+  learning_rate: 0.01
+  nproc_per_node: 1
+  gpu_ids: "0"

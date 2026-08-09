@@ -106,27 +106,44 @@ prototype/
 
 ## Environments
 
-Use two environments:
+The project is designed to be cloned to different machines. Keep shared defaults in git, and keep
+machine-specific paths in `local_settings.yaml`.
+
+Typical setup:
 
 1. Windows Python virtual environment for the Gradio prototype UI.
 2. WSL2 Ubuntu environment for real TorchRec / DLRM execution.
+3. Optional Linux-native mode when the UI and TorchRec runtime are both started from Linux.
 
-Recommended local paths:
+Create local settings:
 
-```text
-Windows prototype: C:\Users\han\Desktop\prototype
-Windows DLRM repo: C:\Users\han\Desktop\dlrm
-WSL DLRM repo:     /mnt/c/Users/han/Desktop/dlrm
-WSL Python env:    ~/venvs/torchrec17
-WSL distro:        Ubuntu-22.04
+```powershell
+Copy-Item local_settings.example.yaml local_settings.yaml
+notepad local_settings.yaml
 ```
+
+Edit only the values that are local to your machine:
+
+```yaml
+runtime:
+  platform: windows_wsl
+  wsl_distribution: Ubuntu-22.04
+  python_env: ~/venvs/torchrec17
+
+paths:
+  dlrm_root: /mnt/c/Users/<your-name>/Desktop/dlrm
+  criteo_binary_path: data/criteo_kaggle_sample_npy
+```
+
+`local_settings.yaml` is ignored by git. Other users should create their own copy instead of
+editing committed source files.
 
 ## Install And Start The UI
 
 From PowerShell:
 
 ```powershell
-cd C:\Users\han\Desktop
+cd <parent-folder-of-your-clone>
 python -m venv prototype\.venv
 prototype\.venv\Scripts\Activate.ps1
 pip install -r prototype\requirements.txt
@@ -136,7 +153,7 @@ python -m prototype.app
 If the virtual environment already exists:
 
 ```powershell
-cd C:\Users\han\Desktop
+cd <parent-folder-of-your-clone>
 prototype\.venv\Scripts\Activate.ps1
 python -m prototype.app
 ```
@@ -164,7 +181,7 @@ Ubuntu-22.04    Running or Stopped    2
 Check TorchRec / DLRM runtime:
 
 ```powershell
-wsl -d Ubuntu-22.04 bash -lc "source ~/venvs/torchrec17/bin/activate; cd /mnt/c/Users/han/Desktop/dlrm; which torchrun; python -c 'import torchrec; print(\"torchrec ok\")'"
+wsl -d Ubuntu-22.04 bash -lc "source ~/venvs/torchrec17/bin/activate; cd /mnt/c/Users/<your-name>/Desktop/dlrm; which torchrun; python -c 'import torchrec; print(\"torchrec ok\")'"
 ```
 
 Expected:
@@ -180,9 +197,10 @@ Key fields in the Create Job tab:
 
 - `Mode`: `COLD_START`, `RESUME`, or `EVALUATE`
 - `Backend`: `stub`, `dlrm`, `custom`, or `torchrec_v1`
-- `DLRM Root`: WSL path to local DLRM repo
-- `Python Env`: WSL Python virtual environment
-- `WSL Distribution`: WSL distro name
+- `Runtime Platform`: `windows_wsl` for Windows UI + WSL training, or `linux_native` for Linux shell training
+- `DLRM Root`: local DLRM repo path as seen by the selected runtime
+- `Python Env`: Python virtual environment as seen by the selected runtime
+- `WSL Distribution`: WSL distro name, used only by `windows_wsl`
 - `Data Format`: `random`, `criteo_binary`, `synthetic_multihot`, or `parquet`
 - `Batch Size`: DLRM/stub batch size
 - `Epochs`: training epochs
@@ -203,6 +221,17 @@ The Create Job tab also provides:
 - `Validate Parquet`: validates parquet split paths and schema, then displays a JSON profile
 - `Convert Parquet`: converts parquet splits to DLRM numpy arrays, switches `Data Format` to
   `criteo_binary`, and fills `Criteo Binary Path` with the output directory
+
+## Environment Tab
+
+Use this tab before launching jobs on a newly cloned machine.
+
+- `Refresh Settings`: shows whether the app is reading `local_settings.yaml` or the example template.
+- `Create local_settings.yaml`: copies `local_settings.example.yaml` if the local file does not exist.
+- `Run Environment Checks`: checks WSL or Linux shell access, the configured Python environment,
+  `torch` / `torchrec` imports, DLRM root, and the bundled Criteo sample numpy files.
+
+When a check fails, fix `local_settings.yaml` first, then refresh the page or rerun the checks.
 
 ## Minimal Stub Validation
 
@@ -241,7 +270,7 @@ Create Job:
 ```text
 Backend: dlrm
 Mode: COLD_START
-DLRM Root: /mnt/c/Users/han/Desktop/dlrm
+DLRM Root: /mnt/c/Users/<your-name>/Desktop/dlrm
 Python Env: ~/venvs/torchrec17
 WSL Distribution: Ubuntu-22.04
 Data Format: random
@@ -367,7 +396,7 @@ Expected:
 Use this path for business-style CTR parquet data before launching DLRM.
 
 ```powershell
-cd C:\Users\han\Desktop\prototype
+cd <path-to-your-prototype-clone>
 python -m prototype.runner.convert_parquet --config examples\parquet-conversion-smoke.yaml --output-dir data\converted_criteo_npy
 ```
 
@@ -390,7 +419,7 @@ Expected:
 Run:
 
 ```powershell
-cd C:\Users\han\Desktop\prototype
+cd <path-to-your-prototype-clone>
 powershell -ExecutionPolicy Bypass -File scripts\check_dlrm_checkpoint_patch.ps1
 powershell -ExecutionPolicy Bypass -File scripts\check_dlrm_profiler_patch.ps1
 ```
@@ -466,7 +495,7 @@ TorchRec DMP / TrainPipeline execution.
 Before claiming real `DistributedModelParallel` execution is ready, run this from PowerShell:
 
 ```powershell
-cd C:\Users\han\Desktop\prototype
+cd <path-to-your-prototype-clone>
 powershell -ExecutionPolicy Bypass -File scripts\check_torchrec_v1_dmp_readiness.ps1
 ```
 
@@ -507,7 +536,7 @@ Expected:
 Preprocessed tiny Criteo sample:
 
 ```text
-C:\Users\han\Desktop\prototype\data\criteo_kaggle_sample_npy
+data/criteo_kaggle_sample_npy
 ```
 
 Create Job:
@@ -516,7 +545,7 @@ Create Job:
 Backend: dlrm
 Mode: COLD_START
 Data Format: criteo_binary
-Criteo Binary Path: C:\Users\han\Desktop\prototype\data\criteo_kaggle_sample_npy
+Criteo Binary Path: data/criteo_kaggle_sample_npy
 Dataset Name: criteo_kaggle
 Batch Size: 4
 Test Batch Size: 4
@@ -546,12 +575,12 @@ Create Job:
 Backend: dlrm
 Mode: EVALUATE
 Data Format: criteo_binary
-Criteo Binary Path: C:\Users\han\Desktop\prototype\data\criteo_kaggle_sample_npy
+Criteo Binary Path: data/criteo_kaggle_sample_npy
 Dataset Name: criteo_kaggle
 Batch Size: 4
 Max Steps: 1
 Processes per Node: 1
-Checkpoint Load Path: C:\Users\han\Desktop\prototype\runs\20260728-150552-7e92c28f\checkpoints\step-final
+Checkpoint Load Path: runs/<job_id>/checkpoints/step-final
 ```
 
 Expected:
@@ -579,6 +608,10 @@ RESUME:   runs/20260728-150919-da311650
 
 Builds a `PrototypeConfig`, previews it as YAML, creates a run directory, and launches the selected
 backend.
+
+### Environment
+
+Shows the active local settings file and runs portability checks for the selected machine.
 
 ### Logs
 
@@ -674,7 +707,7 @@ Stop Job:
 Run:
 
 ```powershell
-cd C:\Users\han\Desktop\prototype
+cd <path-to-your-prototype-clone>
 python -m compileall config.py task_manager.py runner ui
 python -m unittest discover -s tests
 powershell -ExecutionPolicy Bypass -File scripts\check_dlrm_checkpoint_patch.ps1
@@ -684,7 +717,7 @@ powershell -ExecutionPolicy Bypass -File scripts\check_dlrm_profiler_patch.ps1
 If using the project venv:
 
 ```powershell
-cd C:\Users\han\Desktop\prototype
+cd <path-to-your-prototype-clone>
 .\.venv\Scripts\python.exe -m compileall config.py task_manager.py runner ui
 .\.venv\Scripts\python.exe -m unittest discover -s tests
 ```
@@ -696,7 +729,7 @@ cd C:\Users\han\Desktop\prototype
 Activate the project venv and install dependencies:
 
 ```powershell
-cd C:\Users\han\Desktop
+cd <parent-folder-of-your-clone>
 prototype\.venv\Scripts\Activate.ps1
 pip install -r prototype\requirements.txt
 ```

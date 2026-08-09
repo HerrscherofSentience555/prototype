@@ -2,7 +2,8 @@ job_name: stub-smoke
 mode: COLD_START
 backend:
   name: stub
-  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  runtime_platform: windows_wsl
+  dlrm_root: /mnt/c/Users/<your-name>/Desktop/dlrm
   python_env: ~/venvs/torchrec17
   wsl_distribution: Ubuntu-22.04
 nproc_per_node: 1

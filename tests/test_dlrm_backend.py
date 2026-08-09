@@ -16,7 +16,7 @@ from prototype.runner.metrics import append_metric  # noqa: E402
 class DLRMBackendTests(unittest.TestCase):
     def test_train_command_contains_expected_parts(self) -> None:
         config = PrototypeConfig(
-            backend={"name": "dlrm"},
+            backend={"name": "dlrm", "dlrm_root": r"C:\Users\han\Desktop\dlrm"},
             nproc_per_node=2,
             device={"gpu_ids": [0, 1]},
             training={"epochs": 3, "max_steps": 5, "learning_rate": 0.02},
@@ -85,7 +85,7 @@ class DLRMBackendTests(unittest.TestCase):
         self.assertIn("--limit_train_batches 0", script)
         self.assertIn("--limit_val_batches 1", script)
         self.assertIn("--limit_test_batches 1", script)
-        self.assertIn("--checkpoint_load_path checkpoint-path", script)
+        self.assertIn("--checkpoint_load_path /mnt/c/Users/han/Desktop/prototype/checkpoint-path", script)
 
     def test_train_command_contains_checkpoint_save_args(self) -> None:
         config = PrototypeConfig(
@@ -185,19 +185,16 @@ class DLRMBackendTests(unittest.TestCase):
         self.assertTrue(success_exists)
         self.assertTrue(status["success_marker_exists"])
 
-    def test_clean_dlrm_log_text_normalizes_mojibake_wsl_warning(self) -> None:
-        raw = (
-            "\u59ab\u20ac\u5a34\u5b2a\u57cc localhost \u6d60\uff43\u7f02\u608a"
-            "\u95b0\u5db6\u7586[default0]:PARAMS: ok\n"
-        )
+    def test_clean_dlrm_log_text_normalizes_wsl_proxy_warning(self) -> None:
+        raw = "wsl: xxx localhost yyy WSL zzz[default0]:PARAMS: ok\n"
 
         cleaned = clean_dlrm_log_text(raw)
 
-        self.assertIn("wsl: 检测到 localhost 代理配置", cleaned)
+        self.assertIn("wsl: detected localhost proxy configuration", cleaned)
         self.assertIn("[default0]:PARAMS: ok", cleaned)
 
     def test_clean_dlrm_log_text_simplifies_mojibake_progress_bar(self) -> None:
-        cleaned = clean_dlrm_log_text("Epoch 0:  12%|\u923b\u581a\u6795| 15/125 [00:00, 73.30it/s]\n")
+        cleaned = clean_dlrm_log_text("Epoch 0:  12%|鈻堚枏| 15/125 [00:00, 73.30it/s]\n")
 
         self.assertIn("Epoch 0:", cleaned)
         self.assertIn("|...|", cleaned)

@@ -6,6 +6,7 @@ from prototype.task_manager import LocalTaskManager
 from prototype.ui.artifacts_tab import build_artifacts_tab
 from prototype.ui.compare_tab import build_compare_tab
 from prototype.ui.create_tab import build_create_tab
+from prototype.ui.environment_tab import build_environment_tab
 from prototype.ui.logs_tab import build_logs_tab
 from prototype.ui.monitor_tab import build_monitor_tab
 
@@ -20,6 +21,7 @@ def build_app() -> gr.Blocks:
             """
         )
         build_create_tab(task_manager)
+        build_environment_tab()
         build_logs_tab(task_manager)
         build_monitor_tab(task_manager)
         build_artifacts_tab(task_manager)

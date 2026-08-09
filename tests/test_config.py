@@ -21,7 +21,7 @@ class PrototypeConfigTests(unittest.TestCase):
             loaded = PrototypeConfig.from_yaml_file(path)
 
         self.assertEqual(loaded.backend.name.value, "stub")
-        self.assertEqual(loaded.backend.dlrm_root, "/mnt/c/Users/han/Desktop/dlrm")
+        self.assertEqual(loaded.backend.dlrm_root, "/mnt/c/Users/<your-name>/Desktop/dlrm")
         self.assertEqual(loaded.training.learning_rate, 0.01)
 
     def test_invalid_cache_load_factor_fails(self) -> None:

@@ -37,9 +37,15 @@ class BackendName(str, Enum):
     TORCHREC_V1 = "torchrec_v1"
 
 
+class RuntimePlatform(str, Enum):
+    WINDOWS_WSL = "windows_wsl"
+    LINUX_NATIVE = "linux_native"
+
+
 class BackendConfig(BaseModel):
     name: BackendName = BackendName.STUB
-    dlrm_root: str = "/mnt/c/Users/han/Desktop/dlrm"
+    runtime_platform: RuntimePlatform = RuntimePlatform.WINDOWS_WSL
+    dlrm_root: str = "/mnt/c/Users/<your-name>/Desktop/dlrm"
     python_env: str = "~/venvs/torchrec17"
     wsl_distribution: str = "Ubuntu-22.04"
 

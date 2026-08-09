@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import re
@@ -10,6 +10,13 @@ from pathlib import Path
 
 from prototype.config import PrototypeConfig, RunMode
 from prototype.runner.backends.base import RunnerBackend
+from prototype.runner.backends.runtime_env import (
+    build_shell_command,
+    resolve_project_path,
+    to_runtime_path,
+    to_shell_path_literal,
+    to_wsl_path,
+)
 from prototype.runner.log_parser import parse_metric_line
 from prototype.runner.metrics import append_metric
 
@@ -67,9 +74,9 @@ class DLRMBackend(RunnerBackend):
             return exit_code
 
     def build_command(self, config: PrototypeConfig, run_dir: Path) -> list[str]:
-        dlrm_root = self._to_wsl_path(config.backend.dlrm_root)
-        python_env = self._to_wsl_shell_path(config.backend.python_env.rstrip("/"))
-        run_dir_wsl = self._to_wsl_path(str(run_dir))
+        dlrm_root = to_runtime_path(config, config.backend.dlrm_root)
+        python_env = to_shell_path_literal(config, config.backend.python_env.rstrip("/"))
+        run_dir_runtime = to_runtime_path(config, str(run_dir))
         dlrm_args = self._build_dlrm_args(config, run_dir)
         cuda_visible_devices = ",".join(str(gpu_id) for gpu_id in config.device.gpu_ids)
 
@@ -82,18 +89,11 @@ class DLRMBackend(RunnerBackend):
                 f"export CUDA_VISIBLE_DEVICES={shlex.quote(cuda_visible_devices)}",
                 f"source {python_env}/bin/activate",
                 f"cd {shlex.quote(dlrm_root)}",
-                f"export TORCHREC_PROTOTYPE_RUN_DIR={shlex.quote(run_dir_wsl)}",
+                f"export TORCHREC_PROTOTYPE_RUN_DIR={shlex.quote(run_dir_runtime)}",
                 "exec " + " ".join(shlex.quote(part) for part in dlrm_args),
             ]
         )
-        return [
-            "wsl",
-            "-d",
-            config.backend.wsl_distribution,
-            "bash",
-            "-lc",
-            shell_script,
-        ]
+        return build_shell_command(config, shell_script)
 
     def _build_dlrm_args(self, config: PrototypeConfig, run_dir: Path) -> list[str]:
         if config.mode == RunMode.EVALUATE:
@@ -107,7 +107,7 @@ class DLRMBackend(RunnerBackend):
             "--nnodes=1",
             f"--nproc_per_node={config.nproc_per_node}",
             "--log_dir",
-            self._to_wsl_path(str(run_dir / "logs")),
+            to_runtime_path(config, str(run_dir / "logs")),
             "--redirects",
             "3",
             "--tee",
@@ -139,7 +139,7 @@ class DLRMBackend(RunnerBackend):
             args.extend(
                 [
                     "--profile_dir",
-                    self._to_wsl_path(str(run_dir / "profiles" / "dlrm")),
+                    to_runtime_path(config, str(run_dir / "profiles" / "dlrm")),
                     "--profile_record_shapes",
                     str(config.profile.record_shapes).lower(),
                     "--profile_memory",
@@ -152,22 +152,22 @@ class DLRMBackend(RunnerBackend):
             args.extend(
                 [
                     "--in_memory_binary_criteo_path",
-                    self._to_wsl_path(config.data.criteo_binary_path or ""),
+                    to_runtime_path(config, config.data.criteo_binary_path or ""),
                 ]
             )
         elif config.data.format == "synthetic_multihot":
             args.extend(
                 [
                     "--synthetic_multi_hot_criteo_path",
-                    self._to_wsl_path(config.data.synthetic_multi_hot_path or ""),
+                    to_runtime_path(config, config.data.synthetic_multi_hot_path or ""),
                 ]
             )
         if config.checkpoint.load_path and config.mode in {RunMode.RESUME, RunMode.EVALUATE}:
-            args.extend(["--checkpoint_load_path", self._to_wsl_path(config.checkpoint.load_path)])
+            args.extend(["--checkpoint_load_path", to_runtime_path(config, config.checkpoint.load_path)])
         if config.checkpoint.enabled and config.mode != RunMode.EVALUATE:
             checkpoint_root = Path(config.checkpoint.save_dir) if config.checkpoint.save_dir else run_dir / "checkpoints"
             save_dir = str(checkpoint_root / "step-final")
-            args.extend(["--checkpoint_save_dir", self._to_wsl_path(save_dir)])
+            args.extend(["--checkpoint_save_dir", to_runtime_path(config, save_dir)])
             if config.checkpoint.save_optimizer:
                 args.append("--checkpoint_save_optimizer")
         return args
@@ -191,7 +191,7 @@ class DLRMBackend(RunnerBackend):
     def _validate_optional_local_path(self, path_value: str | None, label: str) -> None:
         if not path_value:
             raise ValueError(f"{label} is required")
-        path = Path(path_value)
+        path = Path(resolve_project_path(path_value))
         if path.is_absolute() and path.drive and not path.exists():
             raise ValueError(f"{label} does not exist on Windows: {path_value}")
 
@@ -356,17 +356,10 @@ class DLRMBackend(RunnerBackend):
         return record.get("value")
 
     def _to_wsl_path(self, path: str) -> str:
-        normalized = path.replace("\\", "/")
-        if len(normalized) >= 3 and normalized[1:3] == ":/":
-            drive = normalized[0].lower()
-            return f"/mnt/{drive}{normalized[2:]}"
-        return normalized
+        return to_wsl_path(path)
 
     def _to_wsl_shell_path(self, path: str) -> str:
-        normalized = self._to_wsl_path(path)
-        if normalized.startswith("~/"):
-            return "$HOME/" + normalized[2:]
-        return shlex.quote(normalized)
+        return to_shell_path_literal(PrototypeConfig(backend={"name": "dlrm"}), path)
 
     def _decode_output_line(self, raw_line: bytes) -> str:
         if b"\x00" in raw_line:
@@ -396,13 +389,11 @@ def _clean_dlrm_log_line(line: str) -> str:
 
 
 def _normalize_wsl_proxy_warning(line: str) -> str:
-    warning = "wsl: 检测到 localhost 代理配置，但未镜像到 WSL。NAT 模式下的 WSL 不支持 localhost 代理。"
-    mojibake_markers = (
-        "妫€娴嬪埌 localhost",
-        "localhost 浠ｇ悊",
-        "鏈暅鍍忓埌 WSL",
+    warning = (
+        "wsl: detected localhost proxy configuration that is not mirrored into WSL; "
+        "WSL NAT mode does not support localhost proxy forwarding."
     )
-    if any(marker in line for marker in mojibake_markers):
+    if "localhost" in line and ("WSL" in line or _mojibake_score(line) >= 3):
         rank_index = line.find("[default")
         if rank_index >= 0:
             return warning + "\n" + line[rank_index:]
@@ -421,18 +412,25 @@ def _drop_mojibake_prefix_before_rank_output(line: str) -> str:
 
 
 def _looks_like_mojibake_progress(line: str) -> bool:
-    return "鈻" in line and ("Epoch" in line or "Evaluating" in line)
+    return _mojibake_score(line) >= 1 and ("Epoch" in line or "Evaluating" in line)
 
 
 def _mojibake_score(text: str) -> int:
-    markers = "妫娴嬪埌浠ｇ悊閰嶇疆鏈暅鍍忔敮鎸鈻枅枏枌枊鐛鎱婀"
-    return sum(text.count(marker) for marker in markers)
-
+    score = 0
+    for char in text:
+        codepoint = ord(char)
+        if char == "\ufffd":
+            score += 2
+        elif 0x4E00 <= codepoint <= 0x9FFF:
+            score += 1
+        elif 0xE000 <= codepoint <= 0xF8FF:
+            score += 2
+    return score
 
 def _is_unreadable_mojibake_line(line: str) -> bool:
     if not line.strip():
         return False
-    if "wsl: 检测到" in line or "[default" in line:
+    if line.startswith("wsl: detected localhost proxy") or "[default" in line:
         return False
     non_ascii = sum(1 for char in line if ord(char) > 127)
     ascii_letters = sum(1 for char in line if char.isascii() and char.isalpha())
@@ -447,7 +445,7 @@ def _is_unreadable_mojibake_line(line: str) -> bool:
 
 
 def _is_unreadable_mojibake_fragment(text: str) -> bool:
-    non_ascii = sum(1 for char in text if ord(char) > 127)
     ascii_letters = sum(1 for char in text if char.isascii() and char.isalpha())
     cjk = sum(1 for char in text if "\u4e00" <= char <= "\u9fff")
     return ("\ufffd" in text and cjk > 2) or (cjk > 20 and cjk > ascii_letters)
+

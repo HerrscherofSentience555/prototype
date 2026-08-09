@@ -6,13 +6,22 @@ from pathlib import Path
 import gradio as gr
 from pydantic import ValidationError
 
-from prototype.config import BackendName, EmbeddingPlacement, PrecisionMode, PrototypeConfig, RunMode
+from prototype.config import (
+    BackendName,
+    EmbeddingPlacement,
+    PrecisionMode,
+    PrototypeConfig,
+    RunMode,
+    RuntimePlatform,
+)
+from prototype.local_settings import load_local_settings
 from prototype.runner.data_validation import DataValidationError, validate_parquet_dataset
 from prototype.runner.parquet_converter import convert_parquet_to_criteo_numpy
 from prototype.task_manager import LocalTaskManager
 
 
 def build_create_tab(task_manager: LocalTaskManager) -> None:
+    local_settings = load_local_settings()
     with gr.Tab("Create Job"):
         gr.Markdown("Configure a local TorchRec prototype job and launch it.")
 
@@ -26,14 +35,22 @@ def build_create_tab(task_manager: LocalTaskManager) -> None:
             backend = gr.Dropdown(
                 label="Backend",
                 choices=[backend.value for backend in BackendName],
-                value=BackendName.STUB.value,
+                value=local_settings.defaults.backend,
             )
         with gr.Row():
-            dlrm_root = gr.Textbox(label="DLRM Root", value="/mnt/c/Users/han/Desktop/dlrm")
-            python_env = gr.Textbox(label="Python Env", value="~/venvs/torchrec17")
-            wsl_distribution = gr.Textbox(label="WSL Distribution", value="Ubuntu-22.04")
+            runtime_platform = gr.Dropdown(
+                label="Runtime Platform",
+                choices=[platform.value for platform in RuntimePlatform],
+                value=local_settings.runtime.platform,
+            )
+            dlrm_root = gr.Textbox(label="DLRM Root", value=local_settings.paths.dlrm_root)
+            python_env = gr.Textbox(label="Python Env", value=local_settings.runtime.python_env)
+            wsl_distribution = gr.Textbox(
+                label="WSL Distribution",
+                value=local_settings.runtime.wsl_distribution,
+            )
         with gr.Row():
-            model_file = gr.Textbox(label="Model File", value="./model.py")
+            model_file = gr.Textbox(label="Model File", value=local_settings.paths.default_model_file)
             model_config_file = gr.Textbox(label="Model Config File", value="")
         with gr.Row():
             num_embeddings = gr.Number(label="Num Embeddings", value=0, precision=0)
@@ -44,42 +61,59 @@ def build_create_tab(task_manager: LocalTaskManager) -> None:
             data_format = gr.Dropdown(
                 label="Data Format",
                 choices=["random", "criteo_binary", "synthetic_multihot", "parquet"],
-                value="random",
+                value=local_settings.defaults.data_format,
             )
-            batch_size = gr.Number(label="Batch Size", value=32, precision=0)
+            batch_size = gr.Number(label="Batch Size", value=local_settings.defaults.batch_size, precision=0)
         with gr.Row():
-            criteo_binary_path = gr.Textbox(label="Criteo Binary Path", value="")
-            synthetic_multi_hot_path = gr.Textbox(label="Synthetic Multi-Hot Path", value="")
+            criteo_binary_path = gr.Textbox(
+                label="Criteo Binary Path",
+                value=local_settings.paths.criteo_binary_path,
+            )
+            synthetic_multi_hot_path = gr.Textbox(
+                label="Synthetic Multi-Hot Path",
+                value=local_settings.paths.synthetic_multi_hot_path,
+            )
             dataset_name = gr.Dropdown(
                 label="Dataset Name",
                 choices=["criteo_1t", "criteo_kaggle"],
-                value="criteo_1t",
+                value=local_settings.defaults.dataset_name,
             )
         with gr.Row():
-            train_path = gr.Textbox(label="Train Path", value="./data/train")
-            validation_path = gr.Textbox(label="Validation Path", value="./data/validation")
-            test_path = gr.Textbox(label="Test Path", value="./data/test")
-            schema_path = gr.Textbox(label="Schema Path", value="")
+            train_path = gr.Textbox(label="Train Path", value=local_settings.paths.parquet_train_path)
+            validation_path = gr.Textbox(
+                label="Validation Path",
+                value=local_settings.paths.parquet_validation_path,
+            )
+            test_path = gr.Textbox(label="Test Path", value=local_settings.paths.parquet_test_path)
+            schema_path = gr.Textbox(label="Schema Path", value=local_settings.paths.parquet_schema_path)
         with gr.Row():
             parquet_output_path = gr.Textbox(
                 label="Parquet Conversion Output",
-                value="data/converted_criteo_npy",
+                value=local_settings.paths.parquet_conversion_output,
             )
         with gr.Row():
             parquet_status = gr.Textbox(label="Parquet Tool Status", value="")
         parquet_profile = gr.Code(label="Parquet Data Profile", language="json")
         parquet_manifest = gr.Code(label="Parquet Conversion Manifest", language="json")
         with gr.Row():
-            test_batch_size = gr.Number(label="Test Batch Size", value=0, precision=0)
+            test_batch_size = gr.Number(
+                label="Test Batch Size",
+                value=local_settings.defaults.test_batch_size,
+                precision=0,
+            )
             pin_memory = gr.Checkbox(label="Pin Memory", value=False)
             mmap_mode = gr.Checkbox(label="MMAP Mode", value=False)
         with gr.Row():
             epochs = gr.Number(label="Epochs", value=1, precision=0)
-            max_steps = gr.Number(label="Max Steps", value=1, precision=0)
-            learning_rate = gr.Number(label="Learning Rate", value=0.01)
-            nproc = gr.Number(label="Processes per Node", value=1, precision=0)
+            max_steps = gr.Number(label="Max Steps", value=local_settings.defaults.max_steps, precision=0)
+            learning_rate = gr.Number(label="Learning Rate", value=local_settings.defaults.learning_rate)
+            nproc = gr.Number(
+                label="Processes per Node",
+                value=local_settings.defaults.nproc_per_node,
+                precision=0,
+            )
         with gr.Row():
-            gpu_ids = gr.Textbox(label="GPU IDs", value="0")
+            gpu_ids = gr.Textbox(label="GPU IDs", value=local_settings.defaults.gpu_ids)
             embedding_placement = gr.Dropdown(
                 label="Embedding Placement",
                 choices=[placement.value for placement in EmbeddingPlacement],
@@ -142,6 +176,7 @@ def build_create_tab(task_manager: LocalTaskManager) -> None:
             job_name_value: str,
             mode_value: str,
             backend_value: str,
+            runtime_platform_value: str,
             dlrm_root_value: str,
             python_env_value: str,
             wsl_distribution_value: str,
@@ -190,6 +225,7 @@ def build_create_tab(task_manager: LocalTaskManager) -> None:
                 mode=mode_value,
                 backend={
                     "name": backend_value,
+                    "runtime_platform": runtime_platform_value,
                     "dlrm_root": dlrm_root_value,
                     "python_env": python_env_value,
                     "wsl_distribution": wsl_distribution_value,
@@ -306,6 +342,7 @@ def build_create_tab(task_manager: LocalTaskManager) -> None:
             job_name,
             mode,
             backend,
+            runtime_platform,
             dlrm_root,
             python_env,
             wsl_distribution,

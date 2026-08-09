@@ -2,16 +2,17 @@ job_name: parquet-conversion-smoke
 mode: COLD_START
 backend:
   name: dlrm
-  dlrm_root: /mnt/c/Users/han/Desktop/dlrm
+  runtime_platform: windows_wsl
+  dlrm_root: /mnt/c/Users/<your-name>/Desktop/dlrm
   python_env: ~/venvs/torchrec17
   wsl_distribution: Ubuntu-22.04
 nproc_per_node: 1
 data:
   format: parquet
-  train_path: C:\Users\han\Desktop\prototype\data\business_ctr\train.parquet
-  validation_path: C:\Users\han\Desktop\prototype\data\business_ctr\validation.parquet
-  test_path: C:\Users\han\Desktop\prototype\data\business_ctr\test.parquet
-  schema_path: C:\Users\han\Desktop\prototype\examples\schemas\parquet-smoke-schema.yaml
+  train_path: data/business_ctr/train.parquet
+  validation_path: data/business_ctr/validation.parquet
+  test_path: data/business_ctr/test.parquet
+  schema_path: examples/schemas/parquet-smoke-schema.yaml
   batch_size: 4
   test_batch_size: 4
 training:
