@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from prototype.config import PrototypeConfig, RunMode  # noqa: E402
 from prototype.runner.backends.stub_backend import StubBackend  # noqa: E402
-from prototype.runner.checkpoints import write_checkpoint  # noqa: E402
+from prototype.runner.checkpoints import read_checkpoint, write_checkpoint  # noqa: E402
 from prototype.task_manager import LocalTaskManager  # noqa: E402
 
 
@@ -101,6 +101,15 @@ class StubAndTaskManagerTests(unittest.TestCase):
             )
 
         self.assertEqual(checkpoint_dirs, ["step-000002", "step-000003"])
+
+    def test_read_checkpoint_requires_success_marker_for_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            checkpoint_dir = Path(tmpdir) / "step-000001"
+            checkpoint_dir.mkdir()
+            (checkpoint_dir / "model.json").write_text('{"step": 1}', encoding="utf-8")
+
+            with self.assertRaises(FileNotFoundError):
+                read_checkpoint(checkpoint_dir)
 
     def test_stub_evaluation_outputs_evaluation_and_metrics(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

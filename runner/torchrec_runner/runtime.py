@@ -35,7 +35,7 @@ def write_runtime_smoke(
             "torch and torchrec import successfully in the WSL runtime",
             "KeyedJaggedTensor materialization succeeds",
             "EmbeddingBagConfig import/materialization succeeds",
-            "torch.distributed process group can initialize under torchrun",
+            "torch.distributed process group initializes under torchrun",
             "a real torch.nn.Module is returned by model.build_model(config)",
             "EmbeddingShardingPlanner.collective_plan can run against that model",
         ],

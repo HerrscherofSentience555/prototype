@@ -28,7 +28,7 @@ class TorchRecTrainingPlanTests(unittest.TestCase):
         plan = build_training_plan(config, contract, data_plan)
 
         status_by_name = {step["name"]: step["status"] for step in plan["steps"]}
-        self.assertEqual(status_by_name["wrap_dmp"], "planned")
+        self.assertEqual(status_by_name["wrap_dmp"], "implemented_fallback_or_runtime")
         self.assertEqual(status_by_name["train_pipeline_sparse_dist"], "planned")
         self.assertEqual(status_by_name["profile"], "window_metric_implemented_trace_pending")
 

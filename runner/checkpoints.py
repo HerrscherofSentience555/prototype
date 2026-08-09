@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 
 def write_checkpoint(
@@ -14,6 +14,7 @@ def write_checkpoint(
     optimizer: dict[str, Any] | None = None,
     supported: bool = True,
     keep_last: int | None = None,
+    materialize_extra_files: Callable[[Path], dict[str, Any]] | None = None,
 ) -> Path:
     checkpoint_dir = run_dir / "checkpoints" / f"step-{step:06d}"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -23,6 +24,7 @@ def write_checkpoint(
     if optimizer is not None:
         optimizer_path = checkpoint_dir / "optimizer.json"
         optimizer_path.write_text(json.dumps(optimizer, ensure_ascii=False, indent=2), encoding="utf-8")
+    extra_files = materialize_extra_files(checkpoint_dir) if materialize_extra_files else {}
     metadata = {
         "backend": backend,
         "step": step,
@@ -30,6 +32,7 @@ def write_checkpoint(
         "checkpoint_load_supported": supported,
         "model_path": str(model_path),
         "optimizer_path": str(optimizer_path) if optimizer_path else None,
+        "extra_files": extra_files,
     }
     (checkpoint_dir / "metadata.json").write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2),
@@ -55,6 +58,9 @@ def write_checkpoint(
 def read_checkpoint(checkpoint_path: str | Path) -> dict[str, Any]:
     path = Path(checkpoint_path)
     if path.is_dir():
+        success_path = path / "_SUCCESS"
+        if not success_path.exists():
+            raise FileNotFoundError(f"Checkpoint success marker does not exist: {success_path}")
         model_path = path / "model.json"
     else:
         model_path = path

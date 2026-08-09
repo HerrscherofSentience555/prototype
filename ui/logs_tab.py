@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gradio as gr
 
+from prototype.runner.backends.dlrm_backend import clean_dlrm_log_text
 from prototype.task_manager import LocalTaskManager
 
 
@@ -45,8 +46,8 @@ def build_logs_tab(task_manager: LocalTaskManager) -> None:
             rank_log = task_manager.read_text_file(job_id_text, "train-rank0.log")
             command = task_manager.read_text_file(job_id_text, "command.json")
             return (
-                _tail_text(launcher_log, tail_lines_value),
-                _tail_text(rank_log, tail_lines_value),
+                _tail_text(clean_dlrm_log_text(launcher_log), tail_lines_value),
+                _tail_text(clean_dlrm_log_text(rank_log), tail_lines_value),
                 command,
             )
 

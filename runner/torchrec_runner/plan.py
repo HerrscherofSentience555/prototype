@@ -31,6 +31,26 @@ def build_training_plan(
                 "implemented_fallback_or_runtime",
                 "Create dense/label tensors and KeyedJaggedTensor when torch/torchrec are available.",
             ),
+            _step(
+                "build_runtime_batch",
+                "implemented_fallback_or_runtime",
+                "Build dense tensor, labels tensor, and runtime KeyedJaggedTensor for the runner loop.",
+            ),
+            _step(
+                "rank_shard_runtime_batch",
+                "implemented_fallback_or_runtime",
+                "Shard runtime batch rows by rank when torchrun world_size is greater than one.",
+            ),
+            _step(
+                "multi_rank_runtime_step",
+                "implemented_fallback_or_runtime",
+                "Run one rank-sharded forward/backward/optimizer step per torchrun rank.",
+            ),
+            _step(
+                "multi_rank_runtime_loop",
+                "implemented_fallback_or_runtime",
+                "Run a small max_steps training loop per torchrun rank for smoke validation.",
+            ),
             _step("apply_embedding_placement", _placement_status(config), "Apply DEVICE or MANAGED_CACHING placement."),
             _step(
                 "materialize_embedding_configs",
@@ -43,7 +63,11 @@ def build_training_plan(
                 _sharding_status(sharding_report),
                 "Create TorchRec EmbeddingShardingPlanner and sharding plan.",
             ),
-            _step("wrap_dmp", "planned", "Wrap model with DistributedModelParallel."),
+            _step(
+                "wrap_dmp",
+                "implemented_fallback_or_runtime",
+                "Attempt DistributedModelParallel wrapping when torchrun process group is initialized.",
+            ),
             _step("build_optimizer", _function_status(contract_report, "build_optimizer"), "Create fused sparse and dense optimizers."),
             _step("load_checkpoint", _checkpoint_load_status(config), "Load checkpoint for RESUME/EVALUATE."),
             _step("train_pipeline_sparse_dist", "planned", "Run TrainPipelineSparseDist training/evaluation loop."),

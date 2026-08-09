@@ -31,10 +31,29 @@ def build_artifacts_tab(task_manager: LocalTaskManager) -> None:
             label="artifacts/torchrec-batch-materialization.json",
             language="json",
         )
+        runtime_batch_view = gr.Code(label="artifacts/torchrec-runtime-batch.json", language="json")
+        runtime_batch_summary_view = gr.Code(
+            label="artifacts/torchrec-runtime-batch-summary.json",
+            language="json",
+        )
         embedding_configs_view = gr.Code(label="artifacts/torchrec-embedding-configs.json", language="json")
         runtime_smoke_view = gr.Code(label="artifacts/torchrec-runtime-smoke.json", language="json")
+        distributed_environment_view = gr.Code(
+            label="artifacts/torchrec-distributed-environment.json",
+            language="json",
+        )
         sharding_readiness_view = gr.Code(
             label="artifacts/torchrec-sharding-plan-readiness.json",
+            language="json",
+        )
+        dmp_wrap_view = gr.Code(label="artifacts/torchrec-dmp-wrap.json", language="json")
+        dmp_wrap_summary_view = gr.Code(
+            label="artifacts/torchrec-dmp-wrap-summary.json",
+            language="json",
+        )
+        runtime_step_view = gr.Code(label="artifacts/torchrec-runtime-step.json", language="json")
+        runtime_step_summary_view = gr.Code(
+            label="artifacts/torchrec-runtime-step-summary.json",
             language="json",
         )
         training_plan_view = gr.Code(label="artifacts/torchrec-training-plan.json", language="json")
@@ -49,7 +68,7 @@ def build_artifacts_tab(task_manager: LocalTaskManager) -> None:
         def read_artifacts(job_id_value: str) -> tuple[str, ...]:
             job_id_text = _job_id_from_label(job_id_value)
             if not job_id_text:
-                return "", "", "", "", "", "", "", "", "", "", "", ""
+                return "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
             checkpoints = task_manager.list_files(job_id_text, "checkpoints")
             profiles = task_manager.list_files(job_id_text, "profiles")
             artifacts = task_manager.list_files(job_id_text, "artifacts")
@@ -69,9 +88,16 @@ def build_artifacts_tab(task_manager: LocalTaskManager) -> None:
                 task_manager.read_text_file(job_id_text, "artifacts/torchrec-model-contract.json"),
                 task_manager.read_text_file(job_id_text, "artifacts/torchrec-data-plan.json"),
                 task_manager.read_text_file(job_id_text, "artifacts/torchrec-batch-materialization.json"),
+                task_manager.read_text_file(job_id_text, "artifacts/torchrec-runtime-batch.json"),
+                task_manager.read_text_file(job_id_text, "artifacts/torchrec-runtime-batch-summary.json"),
                 task_manager.read_text_file(job_id_text, "artifacts/torchrec-embedding-configs.json"),
                 task_manager.read_text_file(job_id_text, "artifacts/torchrec-runtime-smoke.json"),
+                task_manager.read_text_file(job_id_text, "artifacts/torchrec-distributed-environment.json"),
                 task_manager.read_text_file(job_id_text, "artifacts/torchrec-sharding-plan-readiness.json"),
+                task_manager.read_text_file(job_id_text, "artifacts/torchrec-dmp-wrap.json"),
+                task_manager.read_text_file(job_id_text, "artifacts/torchrec-dmp-wrap-summary.json"),
+                task_manager.read_text_file(job_id_text, "artifacts/torchrec-runtime-step.json"),
+                task_manager.read_text_file(job_id_text, "artifacts/torchrec-runtime-step-summary.json"),
                 task_manager.read_text_file(job_id_text, "artifacts/torchrec-training-plan.json"),
                 file_summary,
             )
@@ -98,9 +124,16 @@ def build_artifacts_tab(task_manager: LocalTaskManager) -> None:
                 model_contract_view,
                 data_plan_view,
                 batch_materialization_view,
+                runtime_batch_view,
+                runtime_batch_summary_view,
                 embedding_configs_view,
                 runtime_smoke_view,
+                distributed_environment_view,
                 sharding_readiness_view,
+                dmp_wrap_view,
+                dmp_wrap_summary_view,
+                runtime_step_view,
+                runtime_step_summary_view,
                 training_plan_view,
                 files_view,
             ],
@@ -117,9 +150,16 @@ def build_artifacts_tab(task_manager: LocalTaskManager) -> None:
                 model_contract_view,
                 data_plan_view,
                 batch_materialization_view,
+                runtime_batch_view,
+                runtime_batch_summary_view,
                 embedding_configs_view,
                 runtime_smoke_view,
+                distributed_environment_view,
                 sharding_readiness_view,
+                dmp_wrap_view,
+                dmp_wrap_summary_view,
+                runtime_step_view,
+                runtime_step_summary_view,
                 training_plan_view,
                 files_view,
             ],

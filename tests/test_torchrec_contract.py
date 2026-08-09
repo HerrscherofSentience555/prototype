@@ -76,6 +76,12 @@ class TorchRecContractTests(unittest.TestCase):
             run_torchrec_v1_entry(train_config, train_run)
             latest = json.loads((train_run / "checkpoints" / "latest.json").read_text(encoding="utf-8"))
             success_exists = (Path(latest["latest_checkpoint_dir"]) / "_SUCCESS").exists()
+            checkpoint_payload = json.loads(
+                (Path(latest["latest_checkpoint_dir"]) / "model.json").read_text(encoding="utf-8")
+            )
+            status = json.loads(
+                (train_run / "artifacts" / "torchrec-runner-status.json").read_text(encoding="utf-8")
+            )
             metrics = [
                 json.loads(line)
                 for line in (train_run / "metrics.jsonl").read_text(encoding="utf-8").splitlines()
@@ -89,11 +95,67 @@ class TorchRecContractTests(unittest.TestCase):
             )
             run_torchrec_v1_entry(eval_config, eval_run)
             evaluation = json.loads((eval_run / "evaluation.json").read_text(encoding="utf-8"))
+            model_pt_exists = (Path(latest["latest_checkpoint_dir"]) / "model.pt").exists()
+            optimizer_pt_exists = (Path(latest["latest_checkpoint_dir"]) / "optimizer.pt").exists()
 
         self.assertTrue(success_exists)
         self.assertIn("samples_per_second", [record["metric"] for record in metrics])
+        self.assertIn(
+            checkpoint_payload["single_card_runtime"],
+            {"single_card_runtime", "fallback_minimal_loop"},
+        )
+        self.assertIn(
+            status["status"],
+            {"SUCCEEDED_SINGLE_CARD_RUNTIME", "SUCCEEDED_MINIMAL_LOOP"},
+        )
         self.assertEqual(evaluation["backend"], "torchrec_v1")
         self.assertTrue(evaluation["checkpoint_load_supported"])
+        if checkpoint_payload["single_card_runtime"] == "single_card_runtime":
+            self.assertTrue(model_pt_exists)
+            self.assertTrue(optimizer_pt_exists)
+            self.assertEqual(evaluation["single_card_runtime"], "single_card_runtime")
+            self.assertFalse(evaluation["minimal_loop"])
+
+    def test_entry_single_card_resume_loads_runtime_checkpoint_when_torch_is_available(self) -> None:
+        try:
+            import torch  # noqa: F401
+        except Exception:
+            self.skipTest("torch is not installed in this Python environment")
+
+        model_file = Path(__file__).resolve().parents[1] / "examples" / "models" / "torchrec_v1_model.py"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            train_run = root / "train"
+            resume_run = root / "resume"
+            train_run.mkdir()
+            resume_run.mkdir()
+            train_config = PrototypeConfig(
+                backend={"name": "torchrec_v1"},
+                model={"file": str(model_file)},
+                training={"max_steps": 1},
+                data={"batch_size": 4},
+            )
+            run_torchrec_v1_entry(train_config, train_run)
+            latest = json.loads((train_run / "checkpoints" / "latest.json").read_text(encoding="utf-8"))
+            resume_config = PrototypeConfig(
+                mode=RunMode.RESUME,
+                backend={"name": "torchrec_v1"},
+                model={"file": str(model_file)},
+                checkpoint={"load_path": latest["latest_checkpoint_dir"]},
+                training={"max_steps": 1},
+                data={"batch_size": 4},
+            )
+            run_torchrec_v1_entry(resume_config, resume_run)
+            resume_latest = json.loads((resume_run / "checkpoints" / "latest.json").read_text(encoding="utf-8"))
+            resume_payload = json.loads(
+                (Path(resume_latest["latest_checkpoint_dir"]) / "model.json").read_text(encoding="utf-8")
+            )
+            resume_log = (resume_run / "train-rank0.log").read_text(encoding="utf-8")
+
+        self.assertEqual(resume_payload["step"], 2)
+        self.assertEqual(resume_payload["runtime_checkpoint"]["format"], "torch_state_dict")
+        self.assertTrue(resume_payload["runtime_checkpoint"]["loaded_runtime_checkpoint"])
+        self.assertIn("Loaded single-card runtime weights from:", resume_log)
 
 
 if __name__ == "__main__":

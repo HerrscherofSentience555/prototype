@@ -46,7 +46,7 @@ class TorchRecRuntimeSmokeTests(unittest.TestCase):
         self.assertFalse(report["ready_for_dmp_smoke"])
         self.assertIn("torch missing", report["fallback_reasons"])
         self.assertIn("embedding failed", report["fallback_reasons"])
-        self.assertIn("EmbeddingShardingPlanner.collective_plan can run against that model", report["next_required_for_dmp_smoke"])
+        self.assertIn("torch.distributed process group initializes under torchrun", report["next_required_for_dmp_smoke"])
 
 
 if __name__ == "__main__":

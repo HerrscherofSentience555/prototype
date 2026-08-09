@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from prototype.config import PrototypeConfig, RunMode  # noqa: E402
-from prototype.runner.backends.dlrm_backend import DLRMBackend  # noqa: E402
+from prototype.runner.backends.dlrm_backend import DLRMBackend, clean_dlrm_log_text  # noqa: E402
 from prototype.runner.metrics import append_metric  # noqa: E402
 
 
@@ -184,6 +184,32 @@ class DLRMBackendTests(unittest.TestCase):
 
         self.assertTrue(success_exists)
         self.assertTrue(status["success_marker_exists"])
+
+    def test_clean_dlrm_log_text_normalizes_mojibake_wsl_warning(self) -> None:
+        raw = (
+            "\u59ab\u20ac\u5a34\u5b2a\u57cc localhost \u6d60\uff43\u7f02\u608a"
+            "\u95b0\u5db6\u7586[default0]:PARAMS: ok\n"
+        )
+
+        cleaned = clean_dlrm_log_text(raw)
+
+        self.assertIn("wsl: 检测到 localhost 代理配置", cleaned)
+        self.assertIn("[default0]:PARAMS: ok", cleaned)
+
+    def test_clean_dlrm_log_text_simplifies_mojibake_progress_bar(self) -> None:
+        cleaned = clean_dlrm_log_text("Epoch 0:  12%|\u923b\u581a\u6795| 15/125 [00:00, 73.30it/s]\n")
+
+        self.assertIn("Epoch 0:", cleaned)
+        self.assertIn("|...|", cleaned)
+        self.assertIn("73.30it/s", cleaned)
+
+    def test_clean_dlrm_log_text_drops_unreadable_noise_line(self) -> None:
+        raw = "\ufffd\u5b00\u654420\u617620\u6c75\u3074\u3a5d\n[default0]:PARAMS: ok\n"
+
+        cleaned = clean_dlrm_log_text(raw)
+
+        self.assertNotIn("\ufffd\u5b00\u6544", cleaned)
+        self.assertIn("[default0]:PARAMS: ok", cleaned)
 
 
 if __name__ == "__main__":

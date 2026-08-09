@@ -378,4 +378,76 @@ class DLRMBackend(RunnerBackend):
 
     def _sanitize_output_line(self, line: str) -> str:
         line = re.sub(r"\x1b\[[0-?]*[ -/]*[@-~]", "", line)
+        line = _clean_dlrm_log_line(line)
         return "".join(char for char in line if unicodedata.category(char) != "Cf")
+
+
+def clean_dlrm_log_text(text: str) -> str:
+    return "".join(_clean_dlrm_log_line(line) for line in text.splitlines(keepends=True))
+
+
+def _clean_dlrm_log_line(line: str) -> str:
+    line = _normalize_wsl_proxy_warning(line)
+    if _is_unreadable_mojibake_line(line):
+        return ""
+    if _looks_like_mojibake_progress(line):
+        line = re.sub(r"\|[^|\n]*\|", "|...|", line)
+    return _drop_mojibake_prefix_before_rank_output(line)
+
+
+def _normalize_wsl_proxy_warning(line: str) -> str:
+    warning = "wsl: 检测到 localhost 代理配置，但未镜像到 WSL。NAT 模式下的 WSL 不支持 localhost 代理。"
+    mojibake_markers = (
+        "妫€娴嬪埌 localhost",
+        "localhost 浠ｇ悊",
+        "鏈暅鍍忓埌 WSL",
+    )
+    if any(marker in line for marker in mojibake_markers):
+        rank_index = line.find("[default")
+        if rank_index >= 0:
+            return warning + "\n" + line[rank_index:]
+        return warning + "\n"
+    return line
+
+
+def _drop_mojibake_prefix_before_rank_output(line: str) -> str:
+    rank_index = line.find("[default")
+    if rank_index <= 0:
+        return line
+    prefix = line[:rank_index]
+    if _mojibake_score(prefix) >= 8 or _is_unreadable_mojibake_fragment(prefix):
+        return line[rank_index:]
+    return line
+
+
+def _looks_like_mojibake_progress(line: str) -> bool:
+    return "鈻" in line and ("Epoch" in line or "Evaluating" in line)
+
+
+def _mojibake_score(text: str) -> int:
+    markers = "妫娴嬪埌浠ｇ悊閰嶇疆鏈暅鍍忔敮鎸鈻枅枏枌枊鐛鎱婀"
+    return sum(text.count(marker) for marker in markers)
+
+
+def _is_unreadable_mojibake_line(line: str) -> bool:
+    if not line.strip():
+        return False
+    if "wsl: 检测到" in line or "[default" in line:
+        return False
+    non_ascii = sum(1 for char in line if ord(char) > 127)
+    ascii_letters = sum(1 for char in line if char.isascii() and char.isalpha())
+    cjk = sum(1 for char in line if "\u4e00" <= char <= "\u9fff")
+    if "\ufffd" in line and non_ascii > 12:
+        return True
+    if "\ufffd" in line and cjk > 2:
+        return True
+    if cjk > 30 and cjk > ascii_letters:
+        return True
+    return False
+
+
+def _is_unreadable_mojibake_fragment(text: str) -> bool:
+    non_ascii = sum(1 for char in text if ord(char) > 127)
+    ascii_letters = sum(1 for char in text if char.isascii() and char.isalpha())
+    cjk = sum(1 for char in text if "\u4e00" <= char <= "\u9fff")
+    return ("\ufffd" in text and cjk > 2) or (cjk > 20 and cjk > ascii_letters)
