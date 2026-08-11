@@ -4,6 +4,7 @@ import json
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -201,10 +202,22 @@ class StubAndTaskManagerTests(unittest.TestCase):
             manager = LocalTaskManager(runs_dir=Path(tmpdir))
             job = manager.create_job(PrototypeConfig())
             (job.run_dir / "train-rank0.log").write_text("hello", encoding="utf-8")
+            checkpoint_dir = job.run_dir / "checkpoints" / "step-final"
+            checkpoint_dir.mkdir(parents=True)
+            (checkpoint_dir / "model.pt").write_bytes(b"checkpoint")
 
             manager.update_terminal_state(job.run_dir, 0)
 
-            self.assertTrue((job.run_dir / "artifacts" / "run-artifacts.zip").exists())
+            bundle_path = job.run_dir / "artifacts" / "run-artifacts.zip"
+            with zipfile.ZipFile(bundle_path) as archive:
+                names = set(archive.namelist())
+                manifest = json.loads(archive.read("artifacts/bundle-manifest.json"))
+
+            self.assertTrue(bundle_path.exists())
+            self.assertIn("train-rank0.log", names)
+            self.assertIn("resolved-config.yaml", names)
+            self.assertNotIn("checkpoints/step-final/model.pt", names)
+            self.assertEqual(manifest["excluded_files"][0]["path"], "checkpoints/step-final/model.pt")
 
 
 if __name__ == "__main__":

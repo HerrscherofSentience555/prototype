@@ -22,6 +22,8 @@ RUNS_DIR = Path(__file__).resolve().parent / "runs"
 TERMINAL_STATES = {"STOPPED", "SUCCEEDED", "FAILED"}
 ACTIVE_STATES = {"LAUNCHING", "RUNNING", "STOPPING"}
 STOP_GRACE_SECONDS = 5.0
+BUNDLE_EXCLUDED_SUFFIXES = {".pt", ".pth", ".ckpt", ".bin", ".zip"}
+BUNDLE_MAX_FILE_BYTES = 50 * 1024 * 1024
 
 
 def _now_iso() -> str:
@@ -327,11 +329,36 @@ class LocalTaskManager:
         artifacts_dir = run_dir / "artifacts"
         artifacts_dir.mkdir(exist_ok=True)
         bundle_path = artifacts_dir / "run-artifacts.zip"
+        manifest = {
+            "note": (
+                "This bundle contains logs, configs, metrics, and reports. Large binary artifacts "
+                "such as model checkpoints are excluded to keep the browser download reliable."
+            ),
+            "excluded_files": [],
+        }
         with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             for path in sorted(run_dir.rglob("*")):
                 if not path.is_file() or path == bundle_path:
                     continue
+                if self._exclude_from_run_bundle(path):
+                    manifest["excluded_files"].append(
+                        {
+                            "path": path.relative_to(run_dir).as_posix(),
+                            "size_bytes": path.stat().st_size,
+                            "reason": "large or binary artifact",
+                        }
+                    )
+                    continue
                 archive.write(path, path.relative_to(run_dir))
+            archive.writestr(
+                "artifacts/bundle-manifest.json",
+                json.dumps(manifest, ensure_ascii=False, indent=2),
+            )
+
+    def _exclude_from_run_bundle(self, path: Path) -> bool:
+        if path.suffix.lower() in BUNDLE_EXCLUDED_SUFFIXES:
+            return True
+        return path.stat().st_size > BUNDLE_MAX_FILE_BYTES
 
     def _read_state(self, run_dir: Path) -> dict:
         return json.loads((run_dir / "state.json").read_text(encoding="utf-8"))
